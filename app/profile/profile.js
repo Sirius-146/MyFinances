@@ -1,20 +1,27 @@
-import { TextInput, Text, View, TouchableOpacity, Alert, ActivityIndicator, Modal, Image } from "react-native";
-import { db } from "../../lib/firebase";
-import { doc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
-import { useState, useEffect } from "react";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useThemeColor } from "@/hooks/use-theme-color";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import styles from "./styles/styles";
-import PasswordConfirmationModal from "./components/PasswordConfirmationModal";
+import { router } from "expo-router";
+import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Image, Modal, TextInput, TouchableOpacity, View } from "react-native";
+import { db } from "../../lib/firebase";
 import { getUser } from '../../services/getUser';
 import ModernButton from "../../utils/ModernButton";
-import { router } from "expo-router";
+import PasswordConfirmationModal from "./components/PasswordConfirmationModal";
+import styles from "./styles/styles";
 
 export default function Perfil(){
+    const inputBg = useThemeColor({light: "#f5f5f5", dark: "#1a1a1a"}, "background");
+    const border = useThemeColor({ light: "#ccc", dark: "#444" }, "border");
+    const text = useThemeColor({ light: "#333", dark: "#eee" }, "text");
+
     const [originalData, setOriginalData] = useState({});
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');    
+    const [password, setPassword] = useState('');
     const [name, setName] = useState('');
-    const [userId, setUserId] = useState('');    
+    const [userId, setUserId] = useState('');
     const [profileName, setProfileName] = useState('');
 
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -151,29 +158,32 @@ export default function Perfil(){
     // }
 
     return (
-        <View style={{flex:1, marginTop: 30}}>
-            <View style={styles.imageContainer}>
+        <ThemedView style={{flex:1, marginTop: 30}}>
+            <ThemedView style={styles.imageContainer}>
                 <Image source={require('../../assets/images/perfil.png')} style={styles.image} />
-                <View>
-                    <Text style={styles.textUserName}>{profileName}</Text>
-                </View>
-            </View>
-            <View style={styles.container}>
+                <ThemedText style={[styles.textUserName, {color: text}]}>{profileName}</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.container}>
                 <View>
                     {campos.map((campo, index) => (
                         <View key={index}>
-                            <Text style={styles.label}>{campo.label}</Text>
+                            <ThemedText style={[styles.label, {color: text}]}>{campo.label}</ThemedText>
                             <TextInput
                                 value={campo.value}
                                 onChangeText={campo.setter}
                                 placeholder={campo.placeholder}
-                                placeholderTextColor="#666"
-                                style={styles.inputProfile}
+                                style={[styles.inputProfile,
+                                    {
+                                        backgroundColor: inputBg,
+                                        borderColor: border,
+                                        color: text
+                                    }
+                                ]}
                             />
                         </View>
                     ))}
 
-                    <Text style={styles.label}>{'Senha'}</Text>
+                    <ThemedText style={[styles.label, {color: text}]}>{'Senha'}</ThemedText>
                     <TouchableOpacity
                         onPress={() => router.push(`/profile/PasswordUpdate?userId=${userId}`)}
                     >
@@ -182,8 +192,15 @@ export default function Perfil(){
                             editable={false}
                             secureTextEntry={true}
                             pointerEvents="none"
-                            placeholderTextColor="#666"
-                            style={styles.inputProfile}
+                            placeholderTextColor={useThemeColor({light:"#666", dark:"#aaa"}, "text")}
+                            style={[
+                                styles.inputProfile,
+                                {
+                                    backgroundColor: inputBg,
+                                    borderColor: border,
+                                    color: text
+                                }
+                            ]}
                         />
                     </TouchableOpacity>
                 </View>
@@ -232,7 +249,7 @@ export default function Perfil(){
                     loading={deleting}
                     errorMessage={deleteError}
                 />
-            </View>
-        </View>
+            </ThemedView>
+        </ThemedView>
     );
 }

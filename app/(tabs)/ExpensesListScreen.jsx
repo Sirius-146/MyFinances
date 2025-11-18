@@ -52,7 +52,7 @@ export default function ExpensesListScreen() {
   );
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: COLORS.background }}>
+    <View style={{ flex: 1, padding: 20, paddingTop: 50, backgroundColor: COLORS.background }}>
       <Text style={{ fontSize: 22, marginBottom: 20, color: COLORS.text }}>
         Minhas Despesas
       </Text>

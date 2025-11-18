@@ -1,5 +1,5 @@
 import Perfil from "../profile/profile";
 
-export default function Reservations() {
+export default function Profile() {
   return <Perfil />;
 }

@@ -1,20 +1,17 @@
-import { Platform , StyleSheet } from "react-native";
-
+import { Platform, StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
     container: {
         flex:1,
         justifyContent: 'space-between',
-        backgroundColor: '#fff'
     },
     imageContainer: {
-        backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
+        paddingVertical: 10,
     },
     image: {
         borderWidth: 1,
-        borderColor: 'black',
         height: 130,
         width: 130,
         borderRadius: 65,
@@ -22,19 +19,16 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 16,
-        color: '#333',
         marginHorizontal: 5,
         marginVertical: 0,
         fontWeight: 'bold',
     },
     inputProfile: {
-        backgroundColor: '#f5f4f4ff',
         padding: 5,
         height: 40,
         marginHorizontal:5,
         marginVertical: 5,
         borderWidth: 1,
-        borderColor: '#ccc',
         borderRadius: 8,
     },
 
@@ -131,7 +125,8 @@ const styles = StyleSheet.create({
     },
     textUserName:{
         fontSize: 20,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        paddingVertical: 10,
     },
 });
 
