@@ -25,7 +25,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="register"
+        name="ExpenseForm"
         options={{
           title: 'Cadastrar',
           tabBarIcon: ({ color }) => <FontAwesome5 size={28} name="plus" color={color} />,
@@ -36,6 +36,13 @@ export default function TabLayout() {
         options={{
           title: 'Meu Perfil',
           tabBarIcon: ({ color }) => <FontAwesome5 size={28} name="user-circle" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="ExpensesListScreen"
+        options={{
+          title: 'Meus gastos',
+          tabBarIcon: ({ color }) => <FontAwesome5 size={28} name="receipt" color={color} />,
         }}
       />
     </Tabs>

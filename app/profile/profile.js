@@ -76,7 +76,8 @@ export default function Perfil(){
             Alert.alert('Sucesso', 'Dados atualizados!');
             router.back();
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível atualizar os dados.')
+            Alert.alert('Erro', 'Não foi possível atualizar os dados.');
+            console.log(error);
         } finally {
             setLoading(false);
         }
@@ -127,6 +128,7 @@ export default function Perfil(){
             });
         } catch (error){
             setDeleteError('Erro inesperado ao excluir a conta.'); 
+            console.log(error);
         } finally {
             setDeleting(false);
         }
