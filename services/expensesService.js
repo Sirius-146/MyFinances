@@ -4,8 +4,6 @@ import { db } from "../lib/firebase";
 export async function createExpense(userId, data) {
     const ref = collection(db, "users", userId, "expenses");
     const snapshot = await getDocs(ref);
-    
-    console.log(userId, data);
 
     let maiorId = -1;
     snapshot.forEach((doc) => {

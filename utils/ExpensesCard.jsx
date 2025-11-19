@@ -8,6 +8,12 @@ import { CATEGORY_LABELS } from '../constants/categories';
 import { getTheme } from '../styles/theme';
 import { CategoryIcon } from './categoryIcons';
 
+function parseDateAsLocal(dateStr){
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month-1, day);
+}
+
 export default function ExpenseCard({ item, onPress }) {
   const COLORS = getTheme();
 
@@ -41,7 +47,10 @@ export default function ExpenseCard({ item, onPress }) {
         </Text>
 
         <Text style={{ color: COLORS.textSecondary }}>
-          {new Date(item.date).toLocaleDateString()}
+          {(() =>{
+            const d = parseDateAsLocal(item.date);
+            return d ? d.toLocaleDateString('pt-BR') : '';
+          })()}
         </Text>
       </TouchableOpacity>
 

@@ -1,14 +1,16 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useEffect, useState } from "react";
-import { TouchableOpacity, View } from "react-native";
+import { Keyboard, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Button, Card, HelperText, Text, TextInput } from "react-native-paper";
-import { COLORS } from "../../styles/default";
+import { Button, Card, HelperText, Text, TextInput, useTheme } from "react-native-paper";
 
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 import * as yup from "yup";
+
+import { useThemeColor } from "@/hooks/use-theme-color";
 import { CATEGORY_OPTIONS } from "../../constants/categories";
+import { PAYMENT_OPTIONS } from "../../constants/payments";
 import { createExpense, updateExpense } from "../../services/expensesService";
 import { getUser } from '../../services/getUser';
 
@@ -27,17 +29,11 @@ const schema = yup.object({
   payment: yup.string().required("Informe a forma de pagamento"),
 });
 
-const PAYMENT_OPTIONS = [
-  { label: "Dinheiro", value: "dinheiro" },
-  { label: "Cartão", value: "cartao" },
-  { label: "Pix", value: "pix" },
-];
-
-
 export default function ExpenseForm({ existingData = null }) {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
@@ -51,25 +47,36 @@ export default function ExpenseForm({ existingData = null }) {
     mode: "onChange",
   });
 
-  
   const [userId, setUserId] = useState('');
+  const [openCategory, setOpenCategory] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [openPayment, setOpenPayment] = useState(false);
+
+  // Configurações de modo de tela light/dark
+  const paperTheme = useTheme()
+
+  // cores do tema do seu app (hook customizado)
+  const background = useThemeColor({}, "background");
+  const textColor = useThemeColor({}, "text");
+  const cardColor = useThemeColor({}, "card");
+  const placeholder = useThemeColor({ light: "#777", dark: "#aaa" }, "text");
+  const borderColor = useThemeColor({ light: "#ccc", dark: "#444" }, "border");
+
   useEffect(()=>{
     getUser(setUserId);
   }, []);
-
-  // Estado do dropdown
-  const [openCategory, setOpenCategory] = useState(false);
-
-  // Estado do DatePicker
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const [openPayment, setOpenPayment] = useState(false);
 
   // ----------------------------
   // Funções genéricas simulando banco
   // ----------------------------
   const handleCreate = (payload) => {
-    createExpense(userId, payload);
+    try{
+      createExpense(userId, payload);
+      alert("Registro criado com sucesso!");
+    } catch(error){
+      alert("Houve um problema ao salvar");
+      console.loç(error);
+    }
   };
 
   const handleUpdate = (id, payload) => {
@@ -82,183 +89,222 @@ export default function ExpenseForm({ existingData = null }) {
     } else {
       handleCreate(data);
     }
+
+    reset({
+      category: "",
+      payment: "",
+      value: "",
+      date: "",
+      description: "",
+    });
+
+    setOpenCategory(false);
+    setOpenPayment(false);
   };
 
   return (
-    <View style={{ padding: 20, marginTop: 50 }}>
-      <Card style={{ padding: 16 }}>
-        <Text variant="titleLarge" style={{ marginBottom: 16 }}>
-          {existingData ? "Editar Despesa" : "Registrar Despesa"}
-        </Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={{ padding: 20, marginTop: 50, backgroundColor: background }}>
+        <Card mode="contained" style={{ padding: 16, backgroundColor: cardColor }}>
+          <Text variant="titleLarge" style={{ marginBottom: 16, color: textColor }}>
+            {existingData ? "Editar Despesa" : "Registrar Despesa"}
+          </Text>
 
-        {/* ----------------------------
-            CATEGORIA (DROPDOWN PICKER)
-        ----------------------------- */}
-        <Text style={{ marginBottom: 4 }}>Categoria</Text>
+          {/* ----------------------------
+              CATEGORIA (DROPDOWN PICKER)
+          ----------------------------- */}
+          <Text style={{ marginBottom: 4, color: textColor }}>Categoria</Text>
 
-        <Controller
-          control={control}
-          name="category"
-          render={({ field: { onChange, value } }) => (
-            <>
-              <DropDownPicker
-                open={openCategory}
-                value={value}
-                items={CATEGORY_OPTIONS}
-                setOpen={setOpenCategory}
-                setValue={(callback) => {
-                  const val = callback(value);
-                  onChange(val);
-                }}
-                placeholder="Selecione uma categoria"
-                style={{ marginBottom: errors.category ? 0 : 16 }}
-              />
-              {errors.category && (
-                <HelperText type="error">
-                  {errors.category.message}
-                </HelperText>
-              )}
-            </>
-          )}
-        />
-
-        {/* ----------------------------
-            VALOR
-        ----------------------------- */}
-        <Controller
-          control={control}
-          name="value"
-          render={({ field: { onChange, value } }) => (
-            <>
-              <TextInput
-                label="Valor (R$)"
-                mode="outlined"
-                keyboardType="numeric"
-                value={value}
-                onChangeText={onChange}
-                style={{ marginTop: 8 }}
-              />
-              {errors.value && (
-                <HelperText type="error">{errors.value.message}</HelperText>
-              )}
-            </>
-          )}
-        />
-
-        {/* ----------------------------
-            DATA (DATE PICKER)
-        ----------------------------- */}
-        <Controller
-          control={control}
-          name="date"
-          render={({ field: { onChange, value } }) => (
-            <>
-              <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                <TextInput
-                    label="Data"
-                    mode="outlined"
-                    value={value}
-                    editable={false}
-                    pointerEvents="none"
-                    style={{ marginTop: 8 }}
-                />
-              </TouchableOpacity>
-
-              {errors.date && (
-                <HelperText type="error">{errors.date.message}</HelperText>
-              )}
-
-              {showDatePicker && (
-                <DateTimePicker
-                  mode="date"
-                  display="calendar"
-                  value={
-                    value ? new Date(value) : new Date()
-                  }
-                  onChange={(event, selectedDate) => {
-                    setShowDatePicker(false);
-                    if (selectedDate) {
-                      const iso = selectedDate.toISOString().split("T")[0];
-                      onChange(iso);
-                    }
+          <Controller
+            control={control}
+            name="category"
+            render={({ field: { onChange, value } }) => (
+              <>
+                <DropDownPicker
+                  open={openCategory}
+                  value={value}
+                  items={CATEGORY_OPTIONS}
+                  setOpen={setOpenCategory}
+                  onOpen={() => Keyboard.dismiss()}
+                  setValue={(callback) => onChange(callback(value))}
+                  placeholder="Selecione uma categoria"
+                  style={{
+                    marginBottom: errors.category ? 0 : 16,
+                    backgroundColor: background,
+                    borderColor: borderColor,
                   }}
+                  dropDownContainerStyle={{
+                    backgroundColor: background,
+                    borderColor: borderColor,
+                  }}
+                  textStyle={{ color: textColor }}
                 />
-              )}
-            </>
-          )}
-        />
+                {errors.category && (
+                  <HelperText type="error">
+                    {errors.category.message}
+                  </HelperText>
+                )}
+              </>
+            )}
+          />
 
-        {/* ----------------------------
-            DESCRIÇÃO
-        ----------------------------- */}
-        <Controller
-          control={control}
-          name="description"
-          render={({ field: { onChange, value } }) => (
-            <>
-              <TextInput
-                label="Descrição (opcional)"
-                mode="outlined"
-                value={value}
-                onChangeText={onChange}
-                multiline
-                style={{ marginTop: 8 }}
-              />
-              {errors.description && (
-                <HelperText type="error">
-                  {errors.description.message}
-                </HelperText>
-              )}
-            </>
-          )}
-        />
+          {/* ----------------------------
+              VALOR
+          ----------------------------- */}
+          <Controller
+            control={control}
+            name="value"
+            render={({ field: { onChange, value } }) => (
+              <>
+                <TextInput
+                  label="Valor (R$)"
+                  mode="outlined"
+                  keyboardType="numeric"
+                  value={value}
+                  onChangeText={onChange}
+                  style={{ marginTop: 8 }}
+                  outlineColor={borderColor}
+                />
+                {errors.value && (
+                  <HelperText type="error">{errors.value.message}</HelperText>
+                )}
+              </>
+            )}
+          />
 
-        {/* ---------------------------------------
-          FORMA DE PAGAMENTO (DROPDOWN)
-        ---------------------------------------- */}
-        <Text style={{ marginBottom: 4, marginTop: 10 }}>Forma de Pagamento</Text>
+          {/* ----------------------------
+              DATA (DATE PICKER)
+          ----------------------------- */}
+          <Controller
+            control={control}
+            name="date"
+            render={({ field: { onChange, value } }) => {
+              const displayDate = value
+                ? (()=> {
+                    const [y, m, d] = value.split('-');
+                    return `${d}/${m}/${y}`;
+                  })()
+                : "";
+              
+              return (
+                <>
+                  <TouchableOpacity onPress={() => {Keyboard.dismiss(); setShowDatePicker(true)}}>
+                    <TextInput
+                      label="Data"
+                      mode="outlined"
+                      value={displayDate}
+                      editable={false}
+                      pointerEvents="none"
+                      style={{ marginTop: 8 }}
+                      outlineColor={borderColor}
+                    />
+                  </TouchableOpacity>
+                  
+                  {errors.date && (
+                    <HelperText type="error">{errors.date.message}</HelperText>
+                  )}
+                  
+                  {showDatePicker && (
+                    <DateTimePicker
+                      mode="date"
+                      display="calendar"
+                      value={ value ? new Date(value) : new Date() }
+                      onChange={(event, selectedDate) => {
+                        setShowDatePicker(false);
+                        
+                        if (selectedDate) {
+                          const y = selectedDate.getFullYear();
+                          const m = String(selectedDate.getMonth()+1).padStart(2,"0");
+                          const d = String(selectedDate.getDate()).padStart(2,"0");
+                          
+                          onChange(`${y}-${m}-${d}`);
+                        }
+                      }}
+                    />
+                  )}
+                </>
+              );
+            }}
+          />
 
-        <Controller
-          control={control}
-          name="payment"
-          render={({ field: { onChange, value } }) => (
-            <>
-              <DropDownPicker
-                open={openPayment}  // você vai adicionar esse state logo abaixo
-                value={value}
-                items={PAYMENT_OPTIONS}
-                setOpen={setOpenPayment}
-                setValue={(callback) => {
-                  const val = callback(value);
-                  onChange(val);
-                }}
-                placeholder="Selecione a forma de pagamento"
-                style={{
-                  marginBottom: errors.payment ? 0 : 16,
-                }}
-              />
+          {/* ----------------------------
+              DESCRIÇÃO
+          ----------------------------- */}
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { onChange, value } }) => (
+              <>
+                <TextInput
+                  label="Descrição (opcional)"
+                  mode="outlined"
+                  value={value}
+                  onChangeText={onChange}
+                  multiline
+                  style={{ marginTop: 8 }}
+                  outlineColor={borderColor}
+                />
+                {errors.description && (
+                  <HelperText type="error">
+                    {errors.description.message}
+                  </HelperText>
+                )}
+              </>
+            )}
+          />
 
-              {errors.payment && (
-                <HelperText type="error">
-                  {errors.payment.message}
-                </HelperText>
-              )}
-            </>
-          )}
-        />
+          {/* ---------------------------------------
+            FORMA DE PAGAMENTO (DROPDOWN)
+          ---------------------------------------- */}
+          <Text style={{ marginBottom: 4, marginTop: 10, color: textColor }}>Forma de Pagamento</Text>
 
-        {/* ----------------------------
-            BOTÃO DE ENVIO
-        ----------------------------- */}
-        <Button
-          mode="contained"
-          onPress={handleSubmit(onSubmit)}
-          disabled={!isValid}
-          style={{ marginTop: 20, backgroundColor: COLORS.buttons, color: '#FFF'}}
-        >
-          {existingData ? "Salvar Alterações" : "Registrar"}
-        </Button>
-      </Card>
-    </View>
+          <Controller
+            control={control}
+            name="payment"
+            render={({ field: { onChange, value } }) => (
+              <>
+                <DropDownPicker
+                  open={openPayment}  // você vai adicionar esse state logo abaixo
+                  value={value}
+                  items={PAYMENT_OPTIONS}
+                  setOpen={setOpenPayment}
+                  onOpen={() => Keyboard.dismiss()}
+                  setValue={(callback) => onChange(callback(value))}
+                  placeholder="Selecione a forma de pagamento"
+                  style={{
+                    marginBottom: errors.payment ? 0 : 16,
+                    backgroundColor: background,
+                    borderColor: borderColor,
+                  }}
+                  dropDownContainerStyle={{
+                    backgroundColor: background,
+                    borderColor: borderColor,
+                  }}
+                  textStyle={{ color: textColor }}
+                />
+
+                {errors.payment && (
+                  <HelperText type="error">
+                    {errors.payment.message}
+                  </HelperText>
+                )}
+              </>
+            )}
+          />
+
+          {/* ----------------------------
+              BOTÃO DE ENVIO
+          ----------------------------- */}
+          <Button
+            mode="contained"
+            onPress={handleSubmit(onSubmit)}
+            disabled={!isValid}
+            style={{ marginTop: 20 }}
+          >
+            {existingData ? "Salvar Alterações" : "Registrar"}
+          </Button>
+        </Card>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
