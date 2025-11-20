@@ -1,6 +1,3 @@
-// =============================
-// ExpensesListScreen.jsx (compatível com EXPO ROUTER)
-// =============================
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';
@@ -11,6 +8,8 @@ import { getUser } from '../../services/getUser';
 import { getLocalExpenses } from '../../services/localExpensesService';
 import { getTheme } from '../../styles/theme';
 import ExpenseCard from '../../utils/ExpensesCard';
+import { mergeLocalAndRemote } from '../../utils/mergeLocalAndRemote';
+import { isOnline } from '../../utils/network';
 
 export default function ExpensesListScreen() {
   const router = useRouter();
@@ -36,22 +35,32 @@ export default function ExpensesListScreen() {
     try {
       setLoading(true);
   
-      // Tenta carregar do Firestore
-      const cloudData = await getAllExpenses(userId);
-  
-      if (cloudData && cloudData.length) {
-        setExpenses(cloudData);
-        setFilteredExpenses(cloudData);
-      } else {
-        const localData = await getLocalExpenses();
-        setExpenses(localData);
-        setFilteredExpenses(localData);
-      }
-    } catch (error) {
-      console.log('Error in loadExpenses' + error);
+      // 1) Carregar sempre do armazenamento local
       const localData = await getLocalExpenses();
       setExpenses(localData);
       setFilteredExpenses(localData);
+
+      // 2) Se não tiver internet -> encerra
+      const IsOnline = await isOnline();
+      if(!IsOnline){
+        setLoading(false);
+        return;
+      }
+
+      // 3) Bucar do Firestore (apenas mês atual):
+      const cloudData = await getAllExpenses(userId);
+
+      // 4) Mesclar dados
+      const merged = mergeLocalAndRemote(localData, cloudData);
+
+      // 5) Salvar cache atualizado
+      // A ser implantado no futuro
+
+      // 6) Exibir
+      setExpenses(merged);
+      setFilteredExpenses(merged);
+    } catch (error) {
+      console.log('Error in loadExpenses' + error);
     }
     setLoading(false);
   };

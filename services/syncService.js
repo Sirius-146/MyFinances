@@ -1,7 +1,3 @@
-// ================================
-// syncService.js
-// ================================
-
 import { createExpense, deleteExpense, updateExpense } from "../services/expensesService";
 import { clearPendingSync, getPendingSync, queuePendingSync } from "../services/localExpensesService";
 
@@ -26,6 +22,8 @@ export async function syncPendingExpenses() {
         attempts: rawItem.attempts ?? 0,
       };
 
+      const payload = cleansePayload(item.payload);
+
       // Não pode sincronizar sem userId ou id
       if (!item.userId || !item.id) {
         console.warn("Item inválido na fila de sync:", item);
@@ -40,11 +38,11 @@ export async function syncPendingExpenses() {
       try {
         switch (item.operation) {
           case "create":
-            await createExpense(item.userId, item.payload);
+            await createExpense(item.userId, item.id, payload);
             break;
 
           case "update":
-            await updateExpense(item.userId, item.id, item.payload);
+            await updateExpense(item.userId, item.id, payload);
             break;
 
           case "delete":
@@ -84,4 +82,19 @@ export async function syncPendingExpenses() {
     console.log("Erro syncPendingExpenses (fatal):", error);
     return { success: false, error };
   }
+}
+
+function cleansePayload(payload) {
+  if (!payload) return {};
+
+  const clean = { ...payload };
+
+  delete clean.isLocalOnly;
+  delete clean.lastModified;
+  delete clean.userId;
+  delete clean.synced;
+  delete clean.deleted;
+  delete clean.id;
+
+  return clean;
 }

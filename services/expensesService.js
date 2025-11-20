@@ -1,16 +1,12 @@
-import { collection, deleteDoc, doc, getDocs, serverTimestamp, setDoc } from "firebase/firestore";
-import { nanoid } from "nanoid/non-secure";
+import { collection, deleteDoc, doc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
-export async function createExpense(userId, data) {
-  const id = data.id || nanoid();
-  
+export async function createExpense(userId, id, data) {
   const ref = doc(db, "users", userId, "expenses", id);
 
   await setDoc(ref, {
         ...data,
-        id,
-        createdAt: data.createdAt || serverTimestamp(),
+        createdAt: data.createdAt ?? serverTimestamp(),
         updatedAt: serverTimestamp(),
     }, { merge: true });
     
@@ -20,10 +16,13 @@ export async function createExpense(userId, data) {
 export async function updateExpense(userId, expenseId, data) {
   const ref = doc(db, "users", userId, "expenses", expenseId);
 
-  await setDoc(ref, {
-    ...data,
+  const clean = { ...data };
+  delete clean.createdAt;
+
+  await updateDoc(ref, {
+    ...clean,
     updatedAt: serverTimestamp(),
-  }, { merge: true });
+  });
   
   return true;
 }
@@ -34,13 +33,46 @@ export async function deleteExpense(userId, expenseId) {
   return true;
 }
 
-export async function getAllExpenses(userId) {
-  const snapshot = await getDocs(collection(db, "users", String(userId), "expenses"));
-  return snapshot.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      id: doc.id, // sempre usar docId como id oficial
-      ...data,
-    };
-  });
+/**
+ * Busca as despesas do Firestore filtrando pelo mês.
+ * 
+ * @param {string} userId
+ * @param {string|null} monthKey - Ex: "2025-11" (opcional)
+ */
+export async function getAllExpenses(userId, monthKey = null) {
+  try{
+    const finalMonthKey = monthKey || getMonthKeyFromDate();
+    const nexMonthKey = getNextMonthKey(finalMonthKey);
+
+    const colRef = collection(db, "users", String(userId), "expenses");
+
+    const q = query(
+      colRef,
+      where("date", ">=", `${finalMonthKey}-01`),
+      where("date", "<", `${nexMonthKey}-01`),
+    );
+
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch(e) {
+    console.error("Erro getAllExpenses (mensal):", e);
+    return [];
+  }
+}
+
+/*
+* FUNÇÕES AUXILIARES
+ */
+function getMonthKeyFromDate(date = new Date()){
+  return date.toISOString().slice(0,7);
+}
+
+function getNextMonthKey(monthKey){
+  const [y, m] = monthKey.split('-').map(Number);
+  const next = new Date(y, m, 1); // m já é 0-based aqui
+  return next.toISOString().slice(0, 7);
 }
