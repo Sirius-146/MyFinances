@@ -1,36 +1,30 @@
-import { collection, deleteDoc, doc, getDocs, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, serverTimestamp, setDoc } from "firebase/firestore";
+import { nanoid } from "nanoid/non-secure";
 import { db } from "../lib/firebase";
 
 export async function createExpense(userId, data) {
-    const ref = collection(db, "users", userId, "expenses");
-    const snapshot = await getDocs(ref);
+  const id = data.id || nanoid();
+  
+  const ref = doc(db, "users", userId, "expenses", id);
 
-    let maiorId = -1;
-    snapshot.forEach((doc) => {
-        const data = doc.data();
-        if (typeof data.id === "number" && data.id > maiorId) {
-            maiorId = data.id;
-        }
-    });
-    
-    const novoId = maiorId + 1;
-    
-    await setDoc(doc(ref, novoId.toString()), {
+  await setDoc(ref, {
         ...data,
-        id: novoId,
-        createdAt: serverTimestamp(),
+        id,
+        createdAt: data.createdAt || serverTimestamp(),
         updatedAt: serverTimestamp(),
-    });
+    }, { merge: true });
     
-    return ref.id;
+    return id;
 }
 
 export async function updateExpense(userId, expenseId, data) {
   const ref = doc(db, "users", userId, "expenses", expenseId);
-  await updateDoc(ref, {
+
+  await setDoc(ref, {
     ...data,
     updatedAt: serverTimestamp(),
-  });
+  }, { merge: true });
+  
   return true;
 }
 
@@ -42,5 +36,11 @@ export async function deleteExpense(userId, expenseId) {
 
 export async function getAllExpenses(userId) {
   const snapshot = await getDocs(collection(db, "users", String(userId), "expenses"));
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id, // sempre usar docId como id oficial
+      ...data,
+    };
+  });
 }

@@ -2,7 +2,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useEffect, useState } from "react";
 import { Keyboard, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Button, Card, HelperText, Text, TextInput, useTheme } from "react-native-paper";
+import { Button, Card, HelperText, Text, TextInput } from "react-native-paper";
 
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
@@ -11,8 +11,8 @@ import * as yup from "yup";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { CATEGORY_OPTIONS } from "../../constants/categories";
 import { PAYMENT_OPTIONS } from "../../constants/payments";
-import { createExpense, updateExpense } from "../../services/expensesService";
 import { getUser } from '../../services/getUser';
+import { saveExpenseLocal, updateExpenseLocal } from "../../services/localExpensesService";
 
 // ----------------------------
 // VALIDAÇÃO COM YUP
@@ -52,14 +52,10 @@ export default function ExpenseForm({ existingData = null }) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [openPayment, setOpenPayment] = useState(false);
 
-  // Configurações de modo de tela light/dark
-  const paperTheme = useTheme()
-
   // cores do tema do seu app (hook customizado)
   const background = useThemeColor({}, "background");
   const textColor = useThemeColor({}, "text");
   const cardColor = useThemeColor({}, "card");
-  const placeholder = useThemeColor({ light: "#777", dark: "#aaa" }, "text");
   const borderColor = useThemeColor({ light: "#ccc", dark: "#444" }, "border");
 
   useEffect(()=>{
@@ -69,9 +65,9 @@ export default function ExpenseForm({ existingData = null }) {
   // ----------------------------
   // Funções genéricas simulando banco
   // ----------------------------
-  const handleCreate = (payload) => {
+  const handleCreate = async (payload) => {
     try{
-      createExpense(userId, payload);
+      await saveExpenseLocal(payload, userId);
       alert("Registro criado com sucesso!");
     } catch(error){
       alert("Houve um problema ao salvar");
@@ -79,8 +75,14 @@ export default function ExpenseForm({ existingData = null }) {
     }
   };
 
-  const handleUpdate = (id, payload) => {
-    updateExpense(userId, id, payload);
+  const handleUpdate = async (id, payload) => {
+    try{
+      await updateExpenseLocal(id, payload, userId);
+      alert("Atualizado com sucesso!");
+    } catch(error){
+      alert("Houve um problema ao atualizar")
+      console.log(error);
+    }
   };
 
   const onSubmit = (data) => {

@@ -1,9 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { nanoid } from 'nanoid/non-secure'; // leve e ideal para React Native
 
 const EXPENSES_KEY = '@expenses_storage_key';
 const PENDING_SYNC_KEY = '@expenses_pending_sync';
 
-// Busca todas as despesas salvas localmente
+/* ============================================================
+ * LER / SALVAR DADOS LOCAIS
+ * ============================================================*/
+
 export async function getLocalExpenses() {
   try {
     const data = await AsyncStorage.getItem(EXPENSES_KEY);
@@ -14,12 +18,46 @@ export async function getLocalExpenses() {
   }
 }
 
-// Salva nova despesa localmente
-export async function saveExpenseLocal(expense) {
+async function setLocalExpenses(expenses){
+  try{
+    await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
+  }catch(error){
+    console.log("Erro setLocalExpenses:", error)
+  }
+}
+
+/* ============================================================
+ * CRUD LOCAL COM MARCAÇÃO PARA SYNC
+ * ============================================================*/
+
+/**
+ * Cria despesa local com id local automático.
+ * Gera um ID se não vier do formulário.
+ */
+export async function saveExpenseLocal(expense, userId) {
   try {
     const stored = await getLocalExpenses();
-    const updated = [...stored, expense];
-    await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updated));
+
+    const id = expense.id || nanoid();
+    console.log("Id: ", id);
+    console.log("expense: ", expense)
+
+    const item = {
+      ...expense,
+      id,
+      userId,
+      lastModified: Date.now()
+    };
+
+    await setLocalExpenses([...stored, item]);
+
+    await queuePendingSync({
+      operation: "create",
+      id,
+      userId,
+      payload: item
+    });
+
     return true;
   } catch (error) {
     console.log('Erro saveExpenseLocal:', error);
@@ -27,12 +65,32 @@ export async function saveExpenseLocal(expense) {
   }
 }
 
-// Atualiza despesa local
-export async function updateExpenseLocal(id, updatedData) {
+/**
+ * Atualiza despesa local
+ */
+export async function updateExpenseLocal(id, updatedData, userId) {
   try {
     const stored = await getLocalExpenses();
-    const updated = stored.map(item => item.id === id ? { ...item, ...updatedData } : item);
-    await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updated));
+
+    const updated = stored.map(item =>
+      item.id === id
+        ? { ...item, ...updatedData, lastModified: Date.now() }
+        : item
+    );
+
+    await setLocalExpenses(updated);
+
+    await queuePendingSync({
+      operation: "update",
+      id,
+      userId,
+      payload: {
+        ...updatedData,
+        id,
+        userId
+      }
+    });
+
     return true;
   } catch (error) {
     console.log('Erro updateExpenseLocal:', error);
@@ -40,12 +98,27 @@ export async function updateExpenseLocal(id, updatedData) {
   }
 }
 
-// Remove despesa local
-export async function deleteExpenseLocal(id) {
+/**
+ * Não remove local imediatamente — marca como deleted
+ */
+export async function deleteExpenseLocal(id, userId) {
   try {
     const stored = await getLocalExpenses();
-    const updated = stored.filter(item => item.id !== id);
-    await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(updated));
+
+    const updated = stored.map(item =>
+      item.id === id
+        ? { ...item, deleted: true, lastModified: Date.now() }
+        : item
+    );
+
+    await setLocalExpenses(updated)
+
+    await queuePendingSync({
+      operation: "delete",
+      id,
+      userId
+    });
+
     return true;
   } catch (error) {
     console.log('Erro deleteExpenseLocal:', error);
@@ -53,13 +126,31 @@ export async function deleteExpenseLocal(id) {
   }
 }
 
-// Marca uma despesa para sincronizar posteriormente
-export async function queuePendingSync(expense) {
+/* ============================================================
+ * FILA DE PENDÊNCIAS
+ * ============================================================*/
+
+/**
+ * Padroniza a entrada antes de salvar.
+ * Garante sempre userId, id, payload, attempts...
+ */
+export async function queuePendingSync(entry) {
   try {
     const stored = await AsyncStorage.getItem(PENDING_SYNC_KEY);
     const list = stored ? JSON.parse(stored) : [];
-    const updated = [...list, expense];
-    await AsyncStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(updated));
+
+    const normalized = {
+      operation: entry.operation || "create",
+      id: entry.id || entry.payload?.id || nanoid(),
+      userId: entry.userId || entry.payload?.userId,
+      payload: entry.payload || null,
+      attempts: entry.attempts || 0,
+      createdAt: Date.now()
+    };
+
+    list.push(normalized);
+    
+    await AsyncStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(list));
   } catch (error) {
     console.log('Erro queuePendingSync:', error);
   }
