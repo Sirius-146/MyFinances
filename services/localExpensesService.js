@@ -18,11 +18,14 @@ export function getMonthKey(date = new Date()) {
  * STORAGE HELPERS
  * ============================================================*/
 
-export async function getLocalExpenses(monthKey) {
+export async function getLocalExpenses(userId, monthKey) {
   try {
     const key = monthKey || getMonthKey();
     const data = await AsyncStorage.getItem(key);
-    return data ? JSON.parse(data) : [];
+
+    const list = data ? JSON.parse(data) : [];
+
+    return list.filter(item => String(item.userId ?? item.user_id ?? '') === String(userId));
   } catch (error) {
     console.log("Erro getLocalExpenses:", error);
     return [];
@@ -104,10 +107,11 @@ export async function saveExpenseLocal(expense, userId) {
     const id = expense.id || nanoid();
     const monthKey = getMonthKeyFromItem(expense);
 
-    const stored = await getLocalExpenses(monthKey);
+    const stored = await getLocalExpenses(userId, monthKey);
 
     const item = {
       ...expense,
+      userId,
       id,
       isLocalOnly: true,
       lastModified: Date.now(),
@@ -150,7 +154,7 @@ export async function updateExpenseLocal(id, updatedData, userId) {
     let list = [];
 
     for (const key of monthKeys) {
-      const items = await getLocalExpenses(key);
+      const items = await getLocalExpenses(userId, key);
       const found = items.find(i => i.id === id);
 
       if (found) {
@@ -194,7 +198,7 @@ export async function deleteExpenseLocal(id, userId) {
     const monthKeys = await getAllMonthsStored();
 
     for (const key of monthKeys) {
-      const list = await getLocalExpenses(key);
+      const list = await getLocalExpenses(userId, key);
       const exists = list.some(i => i.id === id);
 
       if (exists) {
@@ -227,10 +231,6 @@ export async function deleteExpenseLocal(id, userId) {
 /* ============================================================
  * LISTAGEM — APENAS O MÊS ATUAL
  * ============================================================*/
-
-export async function listExpensesLocalCurrentMonth() {
-  return await getLocalExpenses(getMonthKey());
-}
 
 /* ============================================================
  * LISTAR TODOS OS MESES ARMAZENADOS (exceto fila)

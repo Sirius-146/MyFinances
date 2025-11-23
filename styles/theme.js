@@ -1,6 +1,3 @@
-// =============================
-// theme.js (tema dinâmico)
-// =============================
 import { Appearance } from "react-native";
 
 export const LightTheme = {
@@ -10,6 +7,8 @@ export const LightTheme = {
   textSecondary: "#555",
   border: "#000080",
   primary: "#4F46E5",
+  success: "#1F51FF",
+  disabled: "#"
 };
 
 export const DarkTheme = {
@@ -19,6 +18,8 @@ export const DarkTheme = {
   textSecondary: "#CCC",
   border: "#00f0ff",
   primary: "#7B6CF6",
+  success: "#1F51FF",
+  // disabled: 
 };
 
 export function getTheme() {

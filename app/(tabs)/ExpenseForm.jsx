@@ -62,16 +62,13 @@ export default function ExpenseForm({ existingData = null }) {
     getUser(setUserId);
   }, []);
 
-  // ----------------------------
-  // Funções genéricas simulando banco
-  // ----------------------------
   const handleCreate = async (payload) => {
     try{
       await saveExpenseLocal(payload, userId);
       alert("Registro criado com sucesso!");
     } catch(error){
       alert("Houve um problema ao salvar");
-      console.loç(error);
+      console.log(error);
     }
   };
 

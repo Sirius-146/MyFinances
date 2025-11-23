@@ -1,7 +1,4 @@
-// =============================
-// ExpenseCard.jsx (card animado reutilizável)
-// =============================
-
+import { FontAwesome5 } from '@expo/vector-icons';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInUp, FadeOut } from 'react-native-reanimated';
 import { CATEGORY_LABELS } from '../constants/categories';
@@ -14,7 +11,7 @@ function parseDateAsLocal(dateStr){
   return new Date(year, month-1, day);
 }
 
-export default function ExpenseCard({ item, onPress }) {
+export default function ExpenseCard({ item, onPress, onDeletePress }) {
   const COLORS = getTheme();
 
   return (
@@ -58,6 +55,10 @@ export default function ExpenseCard({ item, onPress }) {
       <Text style={{ fontWeight: 'bold', fontSize: 16, color: COLORS.primary }}>
         R$ {Number(item.value).toFixed(2)}
       </Text>
+
+      <TouchableOpacity style={{ marginLeft: 14 }} onPress={onDeletePress} >
+        <FontAwesome5 name={"trash-alt"} size={20} color={"red"} />
+      </TouchableOpacity>
     </Animated.View>
   );
 }

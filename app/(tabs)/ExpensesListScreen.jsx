@@ -1,24 +1,27 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { CATEGORY_OPTIONS } from '../../constants/categories';
 import { getAllExpenses } from '../../services/expensesService';
 import { getUser } from '../../services/getUser';
-import { getLocalExpenses } from '../../services/localExpensesService';
+import { deleteExpenseLocal, getLocalExpenses } from '../../services/localExpensesService';
 import { getTheme } from '../../styles/theme';
 import ExpenseCard from '../../utils/ExpensesCard';
 import { mergeLocalAndRemote } from '../../utils/mergeLocalAndRemote';
+import ModalExpenseDetails from '../../utils/ModalExpenseDetails';
 import { isOnline } from '../../utils/network';
 
 export default function ExpensesListScreen() {
-  const router = useRouter();
   const COLORS = getTheme();
+
+  const [userId, setUserId] = useState('');
 
   const [expenses, setExpenses] = useState([]);
   const [filteredExpenses, setFilteredExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState('');
+  const [selectedExpense, setSelectedExpense] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const [openCategory, setOpenCategory] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -36,7 +39,7 @@ export default function ExpensesListScreen() {
       setLoading(true);
   
       // 1) Carregar sempre do armazenamento local
-      const localData = await getLocalExpenses();
+      const localData = await getLocalExpenses(userId);
       setExpenses(localData);
       setFilteredExpenses(localData);
 
@@ -81,6 +84,16 @@ export default function ExpensesListScreen() {
     }
   }, [selectedCategory, expenses]);
 
+  async function handleDelete(expenseId) {
+    try{
+      await deleteExpenseLocal(expenseId, userId);
+      alert("Registro excluído com sucesso!");
+    } catch(error){
+      alert("Houve um problema ao excluir");
+      console.log(error);
+    }
+  }
+
   return (
     <View style={{ flex: 1, padding: 20, paddingTop: 50, backgroundColor: COLORS.background }}>
       <Text style={{ fontSize: 22, marginBottom: 20, color: COLORS.text }}>
@@ -113,11 +126,21 @@ export default function ExpensesListScreen() {
             renderItem={({ item }) => (
               <ExpenseCard
                 item={item}
-                onPress={() => router.push({ pathname: "/form", params: { id: item.id } })}
+                onPress={() => {setSelectedExpense(item); setShowModal(true);}}
+                onDeletePress={() => handleDelete(item.id)}
               />
             )}
           />
         )}
+        <ModalExpenseDetails
+          userId={userId}
+          visible={showModal}
+          onClose={() => setShowModal(false)}
+          expense={selectedExpense}
+          onSaved={() => {
+            loadExpenses();
+          }}
+        />
     </View>
   );
 }
