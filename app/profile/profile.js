@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import { signOut } from "firebase/auth";
+import { signOut, updateEmail } from "firebase/auth";
 import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Modal, TextInput, TouchableOpacity, View } from "react-native";
@@ -18,9 +18,11 @@ export default function Perfil(){
     const border = useThemeColor({ light: "#ccc", dark: "#444" }, "border");
     const text = useThemeColor({ light: "#333", dark: "#eee" }, "text");
 
+    const user = auth.currentUser;
+
     const [originalData, setOriginalData] = useState({});
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    // const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [userId, setUserId] = useState('');
     const [profileName, setProfileName] = useState('');
@@ -32,10 +34,16 @@ export default function Perfil(){
 
     const [loading, setLoading] = useState(false);
 
-    const senhaOculta = "●".repeat(password.length);
+    const [fakeLength, setFakeLength] = useState("");
+    const senhaOculta = "●".repeat(fakeLength);
 
     useEffect(()=>{
         getUser(setUserId);
+    }, []);
+
+    useEffect(() => {
+        const size = generateFakePasswordLength();
+        setFakeLength(size);
     }, []);
 
     useEffect(() => {
@@ -49,18 +57,24 @@ export default function Perfil(){
                 if (userSnap.exists()) {
                     const data = userSnap.data();
                     setOriginalData(data);
-                    setPassword(data.password || '');
-                    setEmail(data.email || '');
                     setName(data.name || '');
                     setProfileName(data.name || '');
                 }
+
+                setEmail(user.email || '');
+                
             } catch (error) {
                 console.error('Erro ao carregar dados do usuário:', error);
             }
         }
 
         loadUserData();
-    }, [userId]);
+    }, [userId, user]);
+
+    function generateFakePasswordLength(min = 6, max = 17) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
 
     async function updateData() {
 
@@ -71,21 +85,26 @@ export default function Perfil(){
 
         const dadosAtualizados = {};
         if (name !== originalData.name) dadosAtualizados.name = name;
-        if (email !== originalData.email) dadosAtualizados.email = email;
+        // if (email !== user.email) dadosAtualizados.email = email;
+        const emailChanged = email !== user.email;
 
-        if (Object.keys(dadosAtualizados).length === 0){
+        if (Object.keys(dadosAtualizados).length === 0 && emailChanged){
             Alert.alert('Aviso', 'Nenhum dado foi alterado.');
             return;
         }
 
         try {
             setLoading(true);
-            await updateDoc(doc(db, 'users', userId), dadosAtualizados);
+
+            if(emailChanged) await updateEmail(user, email);
+
+            if (Object.keys(dadosAtualizados).length > 0) await updateDoc(doc(db, 'users', userId), dadosAtualizados);
+
             Alert.alert('Sucesso', 'Dados atualizados!');
             router.back();
         } catch (error) {
-            Alert.alert('Erro', 'Não foi possível atualizar os dados.');
             console.log(error);
+            Alert.alert('Erro', 'Não foi possível atualizar os dados.');
         } finally {
             setLoading(false);
         }
@@ -118,10 +137,10 @@ export default function Perfil(){
                 return;
             }
 
-            if (confirmPassword !== originalData.password) {
-                setDeleteError('Senha incorreta.');
-                return;
-            }
+            // if (confirmPassword !== originalData.password) {
+            //     setDeleteError('Senha incorreta.');
+            //     return;
+            // }
             
             await deleteDoc(userRef);
             Alert.alert('Sucesso', 'Conta ecluída com sucesso!');

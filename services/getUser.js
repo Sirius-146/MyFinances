@@ -1,15 +1,15 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { auth } from "@/lib/firebase";
 import { router } from "expo-router";
+import { onAuthStateChanged } from "firebase/auth";
 
 export async function getUser(setUserId) {
-    try{
-        const user = await AsyncStorage.getItem('user');
+    const unsubscribe = onAuthStateChanged(auth, (user) =>{
         if(!user){
             router.replace('/');
         }else{
-            setUserId(user);
+            setUserId(user.uid);
         }
-    }catch (error) {
-        console.log('Erro na função getUser: ', error)
-    }
+    });
+
+    return unsubscribe;
 };

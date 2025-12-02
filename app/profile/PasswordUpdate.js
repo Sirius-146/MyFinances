@@ -1,14 +1,13 @@
-import { View } from "react-native";
-import PasswordField from "../../utils/Passwordfield";
 import { useState } from "react";
-import styles from "./styles/styles";
-import { updatePassword } from "../../services/updatePassword";
+import { View } from "react-native";
+import { validatePassword } from "../../services/validatePassword";
 import ModernButton from "../../utils/ModernButton";
+import PasswordField from "../../utils/Passwordfield";
+import styles from "./styles/styles";
 
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 
 export default function PasswordUpdate() {
-    const { userId } = useLocalSearchParams();
     const [password, setPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,8 +21,8 @@ export default function PasswordUpdate() {
         setNewPasswordError('');
         setConfirmPasswordError('');
 
-        const success = await updatePassword(
-            userId, password, newPassword, confirmPassword,
+        const success = await validatePassword(
+            password, newPassword, confirmPassword,
             setPasswordError, setNewPasswordError, setConfirmPasswordError);
         
         if(success){router.replace('/profile');}
