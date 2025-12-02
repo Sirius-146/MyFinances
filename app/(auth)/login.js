@@ -1,12 +1,12 @@
-import { useState } from "react"
-import { View, ActivityIndicator } from "react-native"
-import logIn from "../../services/logIn";
+import { router } from "expo-router";
+import { useState } from "react";
+import { ActivityIndicator, View } from "react-native";
 import RegisterModal from "../../components/registerModal";
-import PasswordField from "../../utils/Passwordfield";
+import loginUser from "../../services/loginUser";
 import styles from "../../styles/loginStyles";
 import ModernButton from "../../utils/ModernButton";
 import ModernInput from "../../utils/ModernInput";
-import { router } from "expo-router";
+import PasswordField from "../../utils/Passwordfield";
 
 export default function Login(){
 
@@ -23,14 +23,10 @@ export default function Login(){
 
         try {
             setLoadingVisible(true);
-            const resultado = await logIn(email, password);
-            setLoadingVisible(false);
 
-            if (resultado) {
-                router.replace('/(tabs)');
-            } else {
-                alert('Usuário ou senha inválidos');
-            }
+            const uid = await loginUser(email, password);
+            setLoadingVisible(false);
+            router.replace('/(tabs)');
         } catch (error) {
             setLoadingVisible(false);
             console.log(error);
@@ -41,9 +37,7 @@ export default function Login(){
         <View style={styles.container}>
             {loadingVisible && (
                 <View style={styles.viewLoading}>
-                    <ActivityIndicator
-                        size='large'
-                    />
+                    <ActivityIndicator size='large'/>
                 </View>
             )}
             <View style={styles.viewForm}>                
@@ -52,6 +46,7 @@ export default function Login(){
                         value={email}
                         onChangeText={setEmail}
                         placeholder="Digite o email"
+                        keyboardType={"email-address"}
                     />
                     <PasswordField
                         value={password}

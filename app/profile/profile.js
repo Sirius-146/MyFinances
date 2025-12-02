@@ -3,10 +3,11 @@ import { ThemedView } from "@/components/themed-view";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { signOut } from "firebase/auth";
 import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Modal, TextInput, TouchableOpacity, View } from "react-native";
-import { db } from "../../lib/firebase";
+import { auth, db } from "../../lib/firebase";
 import { getUser } from '../../services/getUser';
 import ModernButton from "../../utils/ModernButton";
 import PasswordConfirmationModal from "./components/PasswordConfirmationModal";
@@ -91,8 +92,7 @@ export default function Perfil(){
     }
 
     async function logOut(){
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('password');
+      await signOut(auth);
       router.replace('/Home');
   }
 

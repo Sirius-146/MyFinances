@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { View, Modal, ActivityIndicator } from 'react-native';
-import createUser from "../services/createUser";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import PasswordField from "../utils/Passwordfield";
+import { useState } from 'react';
+import { ActivityIndicator, Modal, View } from 'react-native';
+import createUserSafe from '../services/createUserSafe';
 import ModernButton from "../utils/ModernButton";
 import ModernInput from "../utils/ModernInput";
+import PasswordField from "../utils/Passwordfield";
 
 export default function RegisterModal({ visible, onClose, onSuccess, styles }) {
-  const [user, setUsername] = useState('');
+  const [user, setUser] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [repPassword, setRepPassword] = useState('');
@@ -16,7 +16,7 @@ export default function RegisterModal({ visible, onClose, onSuccess, styles }) {
   const [repSenhaError, setRepSenhaError] = useState(null);
 
   function resetFields() {
-    setUsername('');
+    setUser('');
     setEmail('');
     setPassword('');
     setRepPassword('');
@@ -40,9 +40,13 @@ export default function RegisterModal({ visible, onClose, onSuccess, styles }) {
 
     try {
       setLoadingVisible(true);
-      const uid = await createUser( user, password, email);
+      
+      const uid = await createUserSafe(user, email, password);
+      
       await AsyncStorage.setItem('user', uid);
+      
       resetFields();
+
       if (uid) {
         alert('Usuário criado')
         onSuccess();
@@ -67,8 +71,8 @@ export default function RegisterModal({ visible, onClose, onSuccess, styles }) {
             <View style={{alignItems: 'center'}}>
               <ModernInput
                 value={user}
-                onChangeText={setUsername}
-                placeholder="Digite o nome"
+                onChangeText={setUser}
+                placeholder="Digite seu nome"
               />
               <ModernInput
                 value={email}

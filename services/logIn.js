@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { db } from "../lib/firebase";
 import { collection, getDocs } from 'firebase/firestore';
+import { db } from "../lib/firebase";
 
 /**
  * Verifica se o usuário e senha correspondem a um usuário válido no banco.

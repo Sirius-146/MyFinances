@@ -1,4 +1,4 @@
-import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 function isEmailValid(email) {
@@ -6,11 +6,11 @@ function isEmailValid(email) {
 }
 
 /**
- * Módulo para driação de usuários.
+ * Módulo para criação de usuários.
  * @param {string} user - Nome de usuário.
  * @param {string} password - Senha.
  * @param {string} email - email.
- * @returns {string} - Nome do usuário autenticado.
+ * @returns {string} - Nome do usuário criado.
  * @throws {Error} - Em caso de email inválido ou credenciais já em uso.
  */
 async function createUser(user, password, email) {
