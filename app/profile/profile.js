@@ -1,14 +1,13 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { signOut, updateEmail } from "firebase/auth";
-import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, Modal, TextInput, TouchableOpacity, View } from "react-native";
 import { auth, db } from "../../lib/firebase";
-import { getUser } from '../../services/getUser';
+import { deleteUserAccount } from "../../services/deleteUser";
 import ModernButton from "../../utils/ModernButton";
 import PasswordConfirmationModal from "./components/PasswordConfirmationModal";
 import styles from "./styles/styles";
@@ -22,9 +21,7 @@ export default function Perfil(){
 
     const [originalData, setOriginalData] = useState({});
     const [email, setEmail] = useState('');
-    // const [password, setPassword] = useState('');
     const [name, setName] = useState('');
-    const [userId, setUserId] = useState('');
     const [profileName, setProfileName] = useState('');
 
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -37,10 +34,6 @@ export default function Perfil(){
     const [fakeLength, setFakeLength] = useState("");
     const senhaOculta = "●".repeat(fakeLength);
 
-    useEffect(()=>{
-        getUser(setUserId);
-    }, []);
-
     useEffect(() => {
         const size = generateFakePasswordLength();
         setFakeLength(size);
@@ -48,10 +41,10 @@ export default function Perfil(){
 
     useEffect(() => {
         async function loadUserData() {
-            if (!userId) return;
-            
+            if (!user.uid) return;
+
             try {
-                const userRef = doc(db, 'users', userId);
+                const userRef = doc(db, 'users', user.uid);
                 const userSnap = await getDoc(userRef);
                 
                 if (userSnap.exists()) {
@@ -69,7 +62,7 @@ export default function Perfil(){
         }
 
         loadUserData();
-    }, [userId, user]);
+    }, [user]);
 
     function generateFakePasswordLength(min = 6, max = 17) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -78,14 +71,14 @@ export default function Perfil(){
 
     async function updateData() {
 
-        if(!userId){
+        if (!user.uid){
             Alert.alert('Erro', 'Usuário não encontrado');
             return;
         }
 
         const dadosAtualizados = {};
         if (name !== originalData.name) dadosAtualizados.name = name;
-        // if (email !== user.email) dadosAtualizados.email = email;
+
         const emailChanged = email !== user.email;
 
         if (Object.keys(dadosAtualizados).length === 0 && emailChanged){
@@ -98,7 +91,7 @@ export default function Perfil(){
 
             if(emailChanged) await updateEmail(user, email);
 
-            if (Object.keys(dadosAtualizados).length > 0) await updateDoc(doc(db, 'users', userId), dadosAtualizados);
+            if (Object.keys(dadosAtualizados).length > 0) await updateDoc(doc(db, 'users', user.uid), dadosAtualizados);
 
             Alert.alert('Sucesso', 'Dados atualizados!');
             router.back();
@@ -111,53 +104,19 @@ export default function Perfil(){
     }
 
     async function logOut(){
-      await signOut(auth);
-      router.replace('/Home');
-  }
+        await signOut(auth);
+        router.replace('/Home');
+    }
 
-    async function excluirUser() {
-        if(!userId){
-            Alert.alert('Erro', 'Usuário não encontrado');
-            return;
-        }
-        if (!confirmPassword){
-            Alert.alert('Erro', 'Digite sua senha para continuar.');
-            return;
-        }
-
-        try {
-            setDeleting(true);
-            setDeleteError('');
-
-            const userRef = doc(db, 'users', userId);
-            const userSnap = await getDoc(userRef);
-            
-            if (!userSnap.exists()) {
-                setDeleteError('Usuário não encontrado.');
-                return;
-            }
-
-            // if (confirmPassword !== originalData.password) {
-            //     setDeleteError('Senha incorreta.');
-            //     return;
-            // }
-            
-            await deleteDoc(userRef);
-            Alert.alert('Sucesso', 'Conta ecluída com sucesso!');
-            
-            setShowDeleteModal(false);
-            setConfirmPassword('');
-            await AsyncStorage.removeItem('usuario');
-            navigation.reset({
-                index: 0,
-                routes: [{name: 'Login'}]
-            });
-        } catch (error){
-            setDeleteError('Erro inesperado ao excluir a conta.'); 
-            console.log(error);
-        } finally {
-            setDeleting(false);
-        }
+    async function handleDeleteUser() {
+        await deleteUserAccount(
+            {user,
+            confirmPassword,
+            setDeleting,
+            setDeleteError,
+            setShowDeleteModal,
+            setConfirmPassword}
+        );
     }
 
     const campos = [
@@ -204,7 +163,7 @@ export default function Perfil(){
 
                     <ThemedText style={[styles.label, {color: text}]}>{'Senha'}</ThemedText>
                     <TouchableOpacity
-                        onPress={() => router.push(`/profile/PasswordUpdate?userId=${userId}`)}
+                        onPress={() => router.push(`/profile/PasswordUpdate?userId=${user.uid}`)}
                     >
                         <TextInput
                             placeholder={senhaOculta}
@@ -264,7 +223,7 @@ export default function Perfil(){
                         setConfirmPassword('');
                         setDeleteError('');
                     }}
-                    onConfirm={excluirUser}
+                    onConfirm={handleDeleteUser}
                     loading={deleting}
                     errorMessage={deleteError}
                 />

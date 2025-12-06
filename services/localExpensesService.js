@@ -228,9 +228,34 @@ export async function deleteExpenseLocal(id, userId) {
   }
 }
 
-/* ============================================================
- * LISTAGEM — APENAS O MÊS ATUAL
- * ============================================================*/
+export async function wipeExpensesLocal(userId) {
+  try {
+    const monthKeys = await getAllMonthsStored();
+
+    for (const key of monthKeys) {
+      const expenses = await getLocalExpenses(userId, key);
+
+      const remaining = expenses.filter(e => e.userId !== userId);
+
+      await setLocalExpenses(key, remaining);
+
+      //limpa mês vazio
+      // if (remaining.length === 0) await AsyncStorage.removeItem(key);
+    }
+
+    const pending = await getPendingSync();
+    const newPending = pending.filter(p => p.userId !== userId);
+
+    await AsyncStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(newPending));
+    
+    console.log("✔ Todos os dados locais removidos permanentemente");
+    return true;
+  } catch (error) {
+    console.log("Erro wipeExpensesLocal:", error);
+    return false;
+  }
+}
+
 
 /* ============================================================
  * LISTAR TODOS OS MESES ARMAZENADOS (exceto fila)
