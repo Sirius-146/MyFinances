@@ -12,7 +12,7 @@ import { auth } from "../lib/firebase";
 async function loginUser(email, password) {
     try {
         // 1. Autenticação
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, email, password);
         
     } catch(error){
         if (error.code === "auth/invalid-credential") {

@@ -24,7 +24,7 @@ export default function Login(){
         try {
             setLoadingVisible(true);
 
-            const uid = await loginUser(email, password);
+            await loginUser(email, password);
             setLoadingVisible(false);
             router.replace('/(tabs)');
         } catch (error) {

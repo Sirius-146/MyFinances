@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { CATEGORY_OPTIONS } from '../../constants/categories';
+import { auth } from "../../lib/firebase";
 import { getAllExpenses } from '../../services/expensesService';
-import { getUser } from '../../services/getUser';
 import { deleteExpenseLocal, getLocalExpenses } from '../../services/localExpensesService';
 import { getTheme } from '../../styles/theme';
 import ExpenseCard from '../../utils/ExpensesCard';
@@ -15,7 +15,7 @@ import { isOnline } from '../../utils/network';
 export default function ExpensesListScreen() {
   const COLORS = getTheme();
 
-  const [userId, setUserId] = useState('');
+  const user = auth.currentUser;
 
   const [expenses, setExpenses] = useState([]);
   const [filteredExpenses, setFilteredExpenses] = useState([]);
@@ -30,16 +30,12 @@ export default function ExpensesListScreen() {
     ...CATEGORY_OPTIONS
   ]);
 
-  useEffect(()=>{
-    getUser(setUserId);
-  }, []);
-
   const loadExpenses = async () => {
     try {
       setLoading(true);
   
       // 1) Carregar sempre do armazenamento local
-      const localData = await getLocalExpenses(userId);
+      const localData = await getLocalExpenses(user.uid);
       setExpenses(localData);
       setFilteredExpenses(localData);
 
@@ -51,7 +47,7 @@ export default function ExpensesListScreen() {
       }
 
       // 3) Bucar do Firestore (apenas mês atual):
-      const cloudData = await getAllExpenses(userId);
+      const cloudData = await getAllExpenses(user.uid);
 
       // 4) Mesclar dados
       const merged = mergeLocalAndRemote(localData, cloudData);
@@ -70,9 +66,9 @@ export default function ExpensesListScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if(!userId) return;
+      if(!user) return;
       loadExpenses();
-    }, [userId])
+    }, [user])
   );
 
   useEffect(() => {
@@ -86,7 +82,7 @@ export default function ExpensesListScreen() {
 
   async function handleDelete(expenseId) {
     try{
-      await deleteExpenseLocal(expenseId, userId);
+      await deleteExpenseLocal(expenseId, user.uid);
       alert("Registro excluído com sucesso!");
     } catch(error){
       alert("Houve um problema ao excluir");
@@ -133,7 +129,7 @@ export default function ExpensesListScreen() {
           />
         )}
         <ModalExpenseDetails
-          userId={userId}
+          userId={user.uid}
           visible={showModal}
           onClose={() => setShowModal(false)}
           expense={selectedExpense}

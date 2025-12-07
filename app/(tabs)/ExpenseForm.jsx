@@ -1,5 +1,5 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Keyboard, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { Button, Card, HelperText, Text, TextInput } from "react-native-paper";
@@ -11,7 +11,7 @@ import * as yup from "yup";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { CATEGORY_OPTIONS } from "../../constants/categories";
 import { PAYMENT_OPTIONS } from "../../constants/payments";
-import { getUser } from '../../services/getUser';
+import { auth } from "../../lib/firebase";
 import { saveExpenseLocal, updateExpenseLocal } from "../../services/localExpensesService";
 
 // ----------------------------
@@ -47,7 +47,7 @@ export default function ExpenseForm({ existingData = null }) {
     mode: "onChange",
   });
 
-  const [userId, setUserId] = useState('');
+  const user = auth.currentUser;
   const [openCategory, setOpenCategory] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [openPayment, setOpenPayment] = useState(false);
@@ -58,13 +58,9 @@ export default function ExpenseForm({ existingData = null }) {
   const cardColor = useThemeColor({}, "card");
   const borderColor = useThemeColor({ light: "#ccc", dark: "#444" }, "border");
 
-  useEffect(()=>{
-    getUser(setUserId);
-  }, []);
-
   const handleCreate = async (payload) => {
     try{
-      await saveExpenseLocal(payload, userId);
+      await saveExpenseLocal(payload, user.uid);
       alert("Registro criado com sucesso!");
     } catch(error){
       alert("Houve um problema ao salvar");
@@ -74,7 +70,7 @@ export default function ExpenseForm({ existingData = null }) {
 
   const handleUpdate = async (id, payload) => {
     try{
-      await updateExpenseLocal(id, payload, userId);
+      await updateExpenseLocal(id, payload, user.uid);
       alert("Atualizado com sucesso!");
     } catch(error){
       alert("Houve um problema ao atualizar")
