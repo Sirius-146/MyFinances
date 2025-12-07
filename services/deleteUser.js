@@ -13,8 +13,7 @@ import { wipeExpensesLocal } from "./localExpensesService";
  * - Exclui documento no Firestore
  * - Remove chaves locais do AsyncStorage (apenas se Auth foi excluído)
  *
- * @param {Object} params
- * @param {string} params.user - uid / id do doc no Firestore
+ * @param {string} params.user - usuário da sessão atual
  * @param {string} params.confirmPassword - senha atual para reautenticar
  * @param {Function} params.setDeleting - setState boolean
  * @param {Function} params.setDeleteError - setState string

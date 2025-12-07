@@ -1,48 +1,50 @@
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 
 function isEmailValid(email) {
   return /\S+@\S+\.\S+/.test(email);
 }
 
 /**
- * Módulo para criação de usuários.
- * @param {string} user - Nome de usuário.
+ * Módulo para registro de usuários utilizando Firebase Auth.
+ *
+ * @param {string} user - Nome do usuário.
  * @param {string} password - Senha.
- * @param {string} email - email.
+ * @param {string} email - E-mail.
  * @returns {string} - Nome do usuário criado.
- * @throws {Error} - Em caso de email inválido ou credenciais já em uso.
+ * @throws {Error} - Em caso de email inválido ou email já registrado.
  */
-async function createUser(user, password, email) {
+async function createUser(name, email, password) {
   if (!isEmailValid(email)) {
     throw new Error('Digite um e-mail válido!');
   }
 
-  const snapshot = await getDocs(collection(db, 'users'));
-  const users = snapshot.docs.map(doc => doc.data());
+  try {
+    // 1. Criar o usuário no Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const { uid } = userCredential.user;
 
-  const usernameExists = users.some(u => u.name === user);
-  const emailExists = users.some(u => u.email === email);
+    // 2. Criar documento no Firestore (somente dados públicos)
+    await setDoc(doc(db, 'users', uid), {
+      name: name,
+      createdAt: new Date().toISOString(),
+    });
 
-  if (usernameExists) {
-    throw new Error('Usuário já existe!');
-  }
-  if (emailExists) {
-    throw new Error('Email já utilizado!');
-  }
+    return name;
 
-  let maiorId = -1;
-  snapshot.forEach((doc) =>{
-    const data = doc.data();
-    if (typeof data.id === 'number' && data.id > maiorId) {
-      maiorId = data.id;
+  } catch (error) {
+
+    if (error.code === 'auth/email-already-in-use') {
+      throw new Error('Email já está cadastrado!');
     }
-  });
+    if (error.code === 'auth/weak-password') {
+      throw new Error('A senha deve conter pelo menos 6 caracteres!');
+    }
 
-  const novoId = maiorId +1;
-
-  await setDoc(doc(db, 'users', novoId.toString()), {id: novoId, name: user, password: password, email: email });
-  return user;
+    console.error("Erro ao criar usuário:", error);
+    throw new Error('Erro ao criar usuário. Tente novamente.');
+  }
 }
 
 export default createUser;

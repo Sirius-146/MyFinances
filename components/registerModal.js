@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
 import { ActivityIndicator, Modal, View } from 'react-native';
-import createUserSafe from '../services/createUserSafe';
+import createUser from '../services/createUser';
 import ModernButton from "../utils/ModernButton";
 import ModernInput from "../utils/ModernInput";
 import PasswordField from "../utils/Passwordfield";
@@ -41,7 +41,7 @@ export default function RegisterModal({ visible, onClose, onSuccess, styles }) {
     try {
       setLoadingVisible(true);
       
-      const uid = await createUserSafe(user, email, password);
+      const uid = await createUser(user, email, password);
       
       await AsyncStorage.setItem('user', uid);
       
