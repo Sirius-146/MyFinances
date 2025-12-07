@@ -2,17 +2,17 @@ import { initializeApp } from "firebase/app";
 // import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 // import { getAnalytics } from "firebase/analytics";
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
-import { getReactNativePersistence, initializeAuth } from 'firebase/auth';
+import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
+import { getReactNativePersistence, initializeAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAfF-OaL9Dye0Dp7iHP4s90QGZ_CGpzqpU",
-  authDomain: "myfinances-90c76.firebaseapp.com",
-  projectId: "myfinances-90c76",
-  storageBucket: "myfinances-90c76.firebasestorage.app",
-  messagingSenderId: "34624107400",
-  appId: "1:34624107400:web:af90696a57c018f155c03d",
-  measurementId: "G-EWXRHBDRMM"
+    apiKey: "AIzaSyAfF-OaL9Dye0Dp7iHP4s90QGZ_CGpzqpU",
+    authDomain: "myfinances-90c76.firebaseapp.com",
+    projectId: "myfinances-90c76",
+    storageBucket: "myfinances-90c76.firebasestorage.app",
+    messagingSenderId: "34624107400",
+    appId: "1:34624107400:web:af90696a57c018f155c03d",
+    measurementId: "G-EWXRHBDRMM",
 };
 
 // Initialize Firebase
@@ -23,7 +23,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+    persistence: getReactNativePersistence(ReactNativeAsyncStorage),
 });
 export { auth, db };
-

@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { collection, getDocs } from 'firebase/firestore';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
 /**
@@ -11,19 +11,20 @@ import { db } from "../lib/firebase";
  * @returns {string} - ID do usuário autenticado.
  */
 async function logIn(email, password) {
+    const snapshot = await getDocs(collection(db, "users"));
 
-  const snapshot = await getDocs(collection(db, 'users'));
+    const users = snapshot.docs.map((doc) => doc.data());
+    const matchedUser = users.find(
+        (item) => item.email === email && item.password === password
+    );
 
-  const users = snapshot.docs.map(doc => doc.data());
-  const matchedUser = users.find(item => item.email === email && item.password === password);
+    if (!matchedUser) {
+        alert("Usuário ou senha incorretos!");
+    }
 
-  if (!matchedUser) {
-    alert('Usuário ou senha incorretos!');
-  }
-  
-  await AsyncStorage.setItem('user', matchedUser.id.toString());
-  await AsyncStorage.setItem('password', password);
-  return matchedUser.id.toString();
+    await AsyncStorage.setItem("user", matchedUser.id.toString());
+    await AsyncStorage.setItem("password", password);
+    return matchedUser.id.toString();
 }
 
 export default logIn;

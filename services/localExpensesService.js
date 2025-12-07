@@ -1,14 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { nanoid } from 'nanoid/non-secure';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { nanoid } from "nanoid/non-secure";
 import { getPendingSync, queuePendingSync } from "../services/syncService";
 
-const PREFIX = '@expenses';
+const PREFIX = "@expenses";
 const PENDING_SYNC_KEY = `${PREFIX}/pending_sync`;
 
 /* ============================================================
  * STORAGE HELPERS
  * ============================================================
-*/
+ */
 
 /**
  * Retorna todas as despesas armazenadas localmente para um usuário e mês específico.
@@ -16,7 +16,7 @@ const PENDING_SYNC_KEY = `${PREFIX}/pending_sync`;
  * @async
  * @function getLocalExpenses
  * @param {string|number} userId - ID do usuário para filtrar as despesas.
- * @param {string} [monthKey] - Chave do mês no formato `PREFIX/YYYY-MM`.  
+ * @param {string} [monthKey] - Chave do mês no formato `PREFIX/YYYY-MM`.
  * Se não informado, utiliza `getMonthKey()` para o mês atual.
  *
  * @description
@@ -35,17 +35,20 @@ const PENDING_SYNC_KEY = `${PREFIX}/pending_sync`;
  * @returns {Promise<Array<Object>>} Lista de despesas locais filtradas pelo usuário.
  */
 export async function getLocalExpenses(userId, monthKey) {
-  try {
-    const key = monthKey || getMonthKey();
-    const data = await AsyncStorage.getItem(key);
+    try {
+        const key = monthKey || getMonthKey();
+        const data = await AsyncStorage.getItem(key);
 
-    const list = data ? JSON.parse(data) : [];
+        const list = data ? JSON.parse(data) : [];
 
-    return list.filter(item => String(item.userId ?? item.user_id ?? '') === String(userId));
-  } catch (error) {
-    console.log("Erro getLocalExpenses:", error);
-    return [];
-  }
+        return list.filter(
+            (item) =>
+                String(item.userId ?? item.user_id ?? "") === String(userId)
+        );
+    } catch (error) {
+        console.log("Erro getLocalExpenses:", error);
+        return [];
+    }
 }
 
 /**
@@ -67,12 +70,12 @@ export async function getLocalExpenses(userId, monthKey) {
  * @returns {Promise<void>}
  */
 async function setLocalExpenses(monthKey, expenses) {
-  try {
-    if (!monthKey) monthKey = getMonthKey();
-    await AsyncStorage.setItem(monthKey, JSON.stringify(expenses));
-  } catch (error) {
-    console.log("Erro setLocalExpenses:", error);
-  }
+    try {
+        if (!monthKey) monthKey = getMonthKey();
+        await AsyncStorage.setItem(monthKey, JSON.stringify(expenses));
+    } catch (error) {
+        console.log("Erro setLocalExpenses:", error);
+    }
 }
 
 /* ============================================================
@@ -119,46 +122,45 @@ async function setLocalExpenses(monthKey, expenses) {
  * - Retorna `null` em caso de erro.
  */
 export async function saveExpenseLocal(expense, userId) {
-  try {
-    const id = nanoid();
-    const monthKey = getMonthKeyFromItem(expense);
+    try {
+        const id = nanoid();
+        const monthKey = getMonthKeyFromItem(expense);
 
-    const stored = await getLocalExpenses(userId, monthKey);
+        const stored = await getLocalExpenses(userId, monthKey);
 
-    const item = {
-      ...expense,
-      userId,
-      id,
-      isLocalOnly: true,
-      lastModified: Date.now(),
-    };
+        const item = {
+            ...expense,
+            userId,
+            id,
+            isLocalOnly: true,
+            lastModified: Date.now(),
+        };
 
-    await setLocalExpenses(monthKey, [...stored, item]);
+        await setLocalExpenses(monthKey, [...stored, item]);
 
-    // prepara payload que irá para sync
-    const payloadForSync = {
-      ...item,
-    };
+        // prepara payload que irá para sync
+        const payloadForSync = {
+            ...item,
+        };
 
-    // remove campos que não podem ir para Firestore
-    delete payloadForSync.isLocalOnly;
-    delete payloadForSync.lastModified;
-    delete payloadForSync.userId; // redundante
+        // remove campos que não podem ir para Firestore
+        delete payloadForSync.isLocalOnly;
+        delete payloadForSync.lastModified;
+        delete payloadForSync.userId; // redundante
 
-    // Sempre entra na fila (mesmo online)
-    await queuePendingSync({
-      operation: "create",
-      id,
-      userId,
-      payload: payloadForSync
-    });
+        // Sempre entra na fila (mesmo online)
+        await queuePendingSync({
+            operation: "create",
+            id,
+            userId,
+            payload: payloadForSync,
+        });
 
-    return id;
-
-  } catch (error) {
-    console.log("Erro saveExpenseLocal:", error);
-    return null;
-  }
+        return id;
+    } catch (error) {
+        console.log("Erro saveExpenseLocal:", error);
+        return null;
+    }
 }
 
 /**
@@ -173,13 +175,13 @@ export async function saveExpenseLocal(expense, userId) {
  *
  * @description
  * O método permite edição de despesas armazenadas offline. Ele:
- * 
+ *
  * 1. Busca em todos os meses armazenados (`getAllMonthsStored()`) até encontrar o item.
  * 2. Recupera a lista do mês correto e identifica o item correspondente ao `id`.
  * 3. Mescla os novos dados com o objeto original.
  * 4. Marca `lastModified` para controle e regrava o item no AsyncStorage.
  * 5. Enfileira uma operação **update** para futura sincronização com o Firestore.
- * 
+ *
  * Observações:
  * - Apenas atualiza se a despesa existir localmente.
  * - O `payload` vai com todos os dados do item atualizado para sincronização posterior.
@@ -198,51 +200,50 @@ export async function saveExpenseLocal(expense, userId) {
  * - `false` se não encontrada ou se ocorrer erro.
  */
 export async function updateExpenseLocal(id, updatedData, userId) {
-  try {
-    const monthKeys = await getAllMonthsStored();
+    try {
+        const monthKeys = await getAllMonthsStored();
 
-    let targetKey = null;
-    let targetItem = null;
-    let list = [];
+        let targetKey = null;
+        let targetItem = null;
+        let list = [];
 
-    for (const key of monthKeys) {
-      const items = await getLocalExpenses(userId, key);
-      const found = items.find(i => i.id === id);
+        for (const key of monthKeys) {
+            const items = await getLocalExpenses(userId, key);
+            const found = items.find((i) => i.id === id);
 
-      if (found) {
-        targetKey = key;
-        targetItem = found;
-        list = items;
-        break;
-      }
+            if (found) {
+                targetKey = key;
+                targetItem = found;
+                list = items;
+                break;
+            }
+        }
+
+        if (!targetItem) return false;
+
+        const updatedItem = {
+            ...targetItem,
+            ...updatedData,
+            lastModified: Date.now(),
+            userId,
+        };
+
+        const updatedList = list.map((i) => (i.id === id ? updatedItem : i));
+
+        await setLocalExpenses(targetKey, updatedList);
+
+        await queuePendingSync({
+            operation: "update",
+            id,
+            userId,
+            payload: updatedItem,
+        });
+
+        return true;
+    } catch (error) {
+        console.log("Erro updateExpenseLocal:", error);
+        return false;
     }
-
-    if (!targetItem) return false;
-
-    const updatedItem = {
-      ...targetItem,
-      ...updatedData,
-      lastModified: Date.now(),
-      userId
-    };
-
-    const updatedList = list.map(i => (i.id === id ? updatedItem : i));
-
-    await setLocalExpenses(targetKey, updatedList);
-
-    await queuePendingSync({
-      operation: "update",
-      id,
-      userId,
-      payload: updatedItem
-    });
-
-    return true;
-
-  } catch (error) {
-    console.log("Erro updateExpenseLocal:", error);
-    return false;
-  }
 }
 
 /**
@@ -287,38 +288,42 @@ export async function updateExpenseLocal(id, updatedData, userId) {
  * - `false` se a despesa não foi localizada ou ocorreu erro.
  */
 export async function deleteExpenseLocal(id, userId) {
-  try {
-    const monthKeys = await getAllMonthsStored();
+    try {
+        const monthKeys = await getAllMonthsStored();
 
-    for (const key of monthKeys) {
-      const list = await getLocalExpenses(userId, key);
-      const exists = list.some(i => i.id === id);
+        for (const key of monthKeys) {
+            const list = await getLocalExpenses(userId, key);
+            const exists = list.some((i) => i.id === id);
 
-      if (exists) {
-        const newList = list.map(i =>
-          i.id === id
-            ? { ...i, deleted: true, lastModified: Date.now(), userId }
-            : i
-        );
+            if (exists) {
+                const newList = list.map((i) =>
+                    i.id === id
+                        ? {
+                              ...i,
+                              deleted: true,
+                              lastModified: Date.now(),
+                              userId,
+                          }
+                        : i
+                );
 
-        await setLocalExpenses(key, newList);
+                await setLocalExpenses(key, newList);
 
-        await queuePendingSync({
-          operation: "delete",
-          id,
-          userId
-        });
+                await queuePendingSync({
+                    operation: "delete",
+                    id,
+                    userId,
+                });
 
-        return true;
-      }
+                return true;
+            }
+        }
+
+        return false;
+    } catch (error) {
+        console.log("Erro deleteExpenseLocal:", error);
+        return false;
     }
-
-    return false;
-
-  } catch (error) {
-    console.log("Erro deleteExpenseLocal:", error);
-    return false;
-  }
 }
 
 /**
@@ -336,7 +341,7 @@ export async function deleteExpenseLocal(id, userId) {
  * aqui os dados são **removidos imediatamente e sem possibilidade de recuperação**.
  *
  * A rotina executa:
- * 
+ *
  * 1. Obtém todas as chaves de meses armazenados (`getAllMonthsStored()`).
  * 2. Para cada mês:
  *    - Carrega despesas com `getLocalExpenses`.
@@ -361,31 +366,34 @@ export async function deleteExpenseLocal(id, userId) {
  * - `false` se ocorrer erro durante o processo.
  */
 export async function wipeExpensesLocal(userId) {
-  try {
-    const monthKeys = await getAllMonthsStored();
+    try {
+        const monthKeys = await getAllMonthsStored();
 
-    for (const key of monthKeys) {
-      const expenses = await getLocalExpenses(userId, key);
+        for (const key of monthKeys) {
+            const expenses = await getLocalExpenses(userId, key);
 
-      const remaining = expenses.filter(e => e.userId !== userId);
+            const remaining = expenses.filter((e) => e.userId !== userId);
 
-      await setLocalExpenses(key, remaining);
+            await setLocalExpenses(key, remaining);
 
-      //limpa mês vazio
-      // if (remaining.length === 0) await AsyncStorage.removeItem(key);
+            //limpa mês vazio
+            // if (remaining.length === 0) await AsyncStorage.removeItem(key);
+        }
+
+        const pending = await getPendingSync();
+        const newPending = pending.filter((p) => p.userId !== userId);
+
+        await AsyncStorage.setItem(
+            PENDING_SYNC_KEY,
+            JSON.stringify(newPending)
+        );
+
+        console.log("✔ Todos os dados locais removidos permanentemente");
+        return true;
+    } catch (error) {
+        console.log("Erro wipeExpensesLocal:", error);
+        return false;
     }
-
-    const pending = await getPendingSync();
-    const newPending = pending.filter(p => p.userId !== userId);
-
-    await AsyncStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(newPending));
-    
-    console.log("✔ Todos os dados locais removidos permanentemente");
-    return true;
-  } catch (error) {
-    console.log("Erro wipeExpensesLocal:", error);
-    return false;
-  }
 }
 
 /* ============================================================
@@ -411,9 +419,9 @@ export async function wipeExpensesLocal(userId) {
  * @returns {string} A chave formatada no padrão `PREFIX/YYYY-MM`.
  */
 function getMonthKey(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${PREFIX}/${year}-${month}`;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${PREFIX}/${year}-${month}`;
 }
 
 /* ============================================================
@@ -421,8 +429,8 @@ function getMonthKey(date = new Date()) {
  * ============================================================*/
 
 function getMonthKeyFromItem(item) {
-  if (!item?.date) return getMonthKey();
-  return getMonthKey(new Date(item.date));
+    if (!item?.date) return getMonthKey();
+    return getMonthKey(new Date(item.date));
 }
 
 /* ============================================================
@@ -430,13 +438,13 @@ function getMonthKeyFromItem(item) {
  * ============================================================*/
 
 export async function getAllMonthsStored() {
-  try {
-    const keys = await AsyncStorage.getAllKeys();
-    return keys.filter(
-      (k) => k.startsWith(`${PREFIX}/`) && k !== PENDING_SYNC_KEY
-    );
-  } catch (error) {
-    console.log("Erro getAllMonthsStored:", error);
-    return [];
-  }
+    try {
+        const keys = await AsyncStorage.getAllKeys();
+        return keys.filter(
+            (k) => k.startsWith(`${PREFIX}/`) && k !== PENDING_SYNC_KEY
+        );
+    } catch (error) {
+        console.log("Erro getAllMonthsStored:", error);
+        return [];
+    }
 }

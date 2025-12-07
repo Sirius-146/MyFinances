@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { syncPendingExpenses } from "../services/syncService";
 
-export function useSync(){
+export function useSync() {
     const [syncing, setSyncing] = useState(false);
     const [lastSync, setLastSync] = useState(null);
     const [errors, setErrors] = useState(null);
@@ -11,14 +11,14 @@ export function useSync(){
     // Sincronização manual ou automática
     const syncNow = useCallback(async () => {
         if (syncing) return;
-        
+
         setSyncing(true);
         setErrors(null);
-        
+
         try {
             const result = await syncPendingExpenses();
             console.log("SYNC RESULT:", result);
-            
+
             if (isMounted.current) {
                 setLastSync(Date.now());
                 if (result?.failed && result.failed > 0) {
@@ -30,15 +30,17 @@ export function useSync(){
                 setErrors(String(e));
             }
         }
-        
+
         if (isMounted.current) {
             setSyncing(false);
         }
     }, [syncing]);
 
     // Limpando referência
-    useEffect(() =>{
-        return () => { isMounted.current = false; };
+    useEffect(() => {
+        return () => {
+            isMounted.current = false;
+        };
     }, []);
 
     return {

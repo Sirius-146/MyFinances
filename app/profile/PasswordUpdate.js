@@ -5,32 +5,39 @@ import ModernButton from "../../utils/ModernButton";
 import PasswordField from "../../utils/Passwordfield";
 import styles from "./styles/styles";
 
-import { router } from 'expo-router';
+import { router } from "expo-router";
 
 export default function PasswordUpdate() {
-    const [password, setPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
+    const [password, setPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
-    const [passwordError, setPasswordError] = useState('');
-    const [newPasswordError, setNewPasswordError] = useState('');
-    const [confirmPasswordError, setConfirmPasswordError] = useState('');
+    const [passwordError, setPasswordError] = useState("");
+    const [newPasswordError, setNewPasswordError] = useState("");
+    const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
-    async function handleUpdatePassword(){
-        setPasswordError('');
-        setNewPasswordError('');
-        setConfirmPasswordError('');
+    async function handleUpdatePassword() {
+        setPasswordError("");
+        setNewPasswordError("");
+        setConfirmPasswordError("");
 
         const success = await validatePassword(
-            password, newPassword, confirmPassword,
-            setPasswordError, setNewPasswordError, setConfirmPasswordError);
-        
-        if(success){router.replace('/profile');}
+            password,
+            newPassword,
+            confirmPassword,
+            setPasswordError,
+            setNewPasswordError,
+            setConfirmPasswordError
+        );
+
+        if (success) {
+            router.replace("/profile");
+        }
     }
 
     return (
         <View style={styles.container}>
-            <View style={{marginTop:10, marginHorizontal:5}}>
+            <View style={{ marginTop: 10, marginHorizontal: 5 }}>
                 <PasswordField
                     label={"Senha Atual"}
                     value={password}
@@ -45,7 +52,7 @@ export default function PasswordUpdate() {
                     placeholder="Nova Senha"
                     errorMessage={newPasswordError}
                 />
-                
+
                 <PasswordField
                     label={"Confirmar Nova Senha"}
                     value={confirmPassword}
@@ -54,7 +61,7 @@ export default function PasswordUpdate() {
                     errorMessage={confirmPasswordError}
                 />
             </View>
-            <View style={{...styles.footContainer, alignSelf: 'center'}}>
+            <View style={{ ...styles.footContainer, alignSelf: "center" }}>
                 <ModernButton
                     text="Salvar Dados"
                     onPress={handleUpdatePassword}
@@ -62,5 +69,5 @@ export default function PasswordUpdate() {
                 />
             </View>
         </View>
-    )
+    );
 }

@@ -6,30 +6,30 @@ import { auth, db } from "../lib/firebase";
 const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        const snap = await getDoc(doc(db, "users", currentUser.uid));
-        setUser({ uid: currentUser.uid, ...snap.data() });
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
+    useEffect(() => {
+        const unsub = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                const snap = await getDoc(doc(db, "users", currentUser.uid));
+                setUser({ uid: currentUser.uid, ...snap.data() });
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+        });
 
-    return () => unsub();
-  }, []);
+        return () => unsub();
+    }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    return (
+        <AuthContext.Provider value={{ user, loading }}>
+            {children}
+        </AuthContext.Provider>
+    );
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+    return useContext(AuthContext);
 }

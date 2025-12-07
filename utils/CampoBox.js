@@ -9,15 +9,14 @@ export default function CampoBox({
     setDisabledSave,
     customComponent,
     type = "default",
-}){
-    
-    return(
+}) {
+    return (
         <View style={styles.campoBox}>
             <Text style={styles.label}>{label}</Text>
 
             {customComponent ? (
                 customComponent
-            ) :(
+            ) : (
                 <TextInput
                     value={value}
                     placeholder={placeholder}
@@ -31,31 +30,31 @@ export default function CampoBox({
             )}
         </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
     campoBox: {
-        flexDirection:'row',
-        justifyContent: 'space-between',
+        flexDirection: "row",
+        justifyContent: "space-between",
         marginVertical: 5,
     },
     label: {
         fontSize: 20,
-        color: '#444',
+        color: "#444",
         marginHorizontal: 5,
         marginVertical: 0,
-        fontWeight: 'bold',
-        alignSelf: 'center',
+        fontWeight: "bold",
+        alignSelf: "center",
     },
     inputProfile: {
-        backgroundColor: '#f5f4f4ff',
+        backgroundColor: "#f5f4f4ff",
         padding: 5,
         height: 40,
-        width: '60%',
-        marginHorizontal:5,
+        width: "60%",
+        marginHorizontal: 5,
         marginVertical: 5,
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: "#ccc",
         borderRadius: 8,
     },
-})
+});
