@@ -2,6 +2,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
+import MonthYearHeader from "../../components/MonthYearHeader";
 import { CATEGORY_OPTIONS } from "../../constants/categories";
 import { auth } from "../../lib/firebase";
 import { getAllExpenses } from "../../services/expensesService";
@@ -26,6 +27,14 @@ export default function ExpensesListScreen() {
     const [selectedExpense, setSelectedExpense] = useState(null);
     const [showModal, setShowModal] = useState(false);
 
+    const [selectedMonth, setSelectedMonth] = useState(() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+            2,
+            "0"
+        )}`;
+    });
+
     const [openCategory, setOpenCategory] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [categoryItems, setCategoryItems] = useState([
@@ -38,7 +47,7 @@ export default function ExpensesListScreen() {
             setLoading(true);
 
             // 1) Carregar sempre do armazenamento local
-            const localData = await getLocalExpenses(user.uid);
+            const localData = await getLocalExpenses(user.uid, selectedMonth);
             setExpenses(localData);
             setFilteredExpenses(localData);
 
@@ -50,7 +59,7 @@ export default function ExpensesListScreen() {
             }
 
             // 3) Bucar do Firestore (apenas mês atual):
-            const cloudData = await getAllExpenses(user.uid);
+            const cloudData = await getAllExpenses(user.uid, selectedMonth);
 
             // 4) Mesclar dados
             const merged = mergeLocalAndRemote(localData, cloudData);
@@ -63,15 +72,16 @@ export default function ExpensesListScreen() {
             setFilteredExpenses(merged);
         } catch (error) {
             console.log("Error in loadExpenses" + error);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     useFocusEffect(
         useCallback(() => {
             if (!user) return;
             loadExpenses();
-        }, [user])
+        }, [user, selectedMonth])
     );
 
     useEffect(() => {
@@ -109,6 +119,12 @@ export default function ExpensesListScreen() {
             >
                 Minhas Despesas
             </Text>
+
+            <MonthYearHeader
+                value={selectedMonth}
+                onChange={setSelectedMonth}
+                COLORS={COLORS}
+            />
 
             {/* =============================
           DropdownPicker de Filtragem
