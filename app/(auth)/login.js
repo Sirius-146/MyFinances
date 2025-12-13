@@ -4,6 +4,7 @@ import { ActivityIndicator, View } from "react-native";
 import RegisterModal from "../../components/registerModal";
 import loginUser from "../../services/loginUser";
 import styles from "../../styles/loginStyles";
+import AlertPopup from "../../utils/AlertPopup";
 import ModernButton from "../../utils/ModernButton";
 import ModernInput from "../../utils/ModernInput";
 import PasswordField from "../../utils/Passwordfield";
@@ -13,10 +14,20 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [modalVisible, setModalVisible] = useState(false);
     const [loadingVisible, setLoadingVisible] = useState(false);
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertMessage, setAlertMessage] = useState("");
+
+    function handleAuthSuccess(payload = {}) {
+        router.replace({
+            pathname: "/(tabs)",
+            params: { ...payload },
+        });
+    }
 
     async function handleLogin() {
         if (!email || !password) {
-            alert("Preencha todos os campos");
+            setAlertMessage("Preencha todos os campos.");
+            setAlertVisible(true);
             return;
         }
 
@@ -24,11 +35,12 @@ export default function Login() {
             setLoadingVisible(true);
 
             await loginUser(email, password);
-            setLoadingVisible(false);
-            router.replace("/(tabs)");
+            handleAuthSuccess();
         } catch (error) {
+            setAlertMessage(error?.message || "Erro ao realizar login.");
+            setAlertVisible(true);
+        } finally {
             setLoadingVisible(false);
-            console.log(error);
         }
     }
 
@@ -46,6 +58,7 @@ export default function Login() {
                         onChangeText={setEmail}
                         placeholder="Digite o email"
                         keyboardType={"email-address"}
+                        autoCapitalize="none"
                     />
                     <PasswordField
                         value={password}
@@ -71,10 +84,20 @@ export default function Login() {
                 <RegisterModal
                     visible={modalVisible}
                     onClose={() => setModalVisible(false)}
-                    onSuccess={() => router.replace("/(tabs)")}
+                    onSuccess={handleAuthSuccess}
+                    onError={(message) => {
+                        setAlertMessage(message);
+                        setAlertVisible(true);
+                    }}
                     styles={styles}
                 />
             </View>
+
+            <AlertPopup
+                visible={alertVisible}
+                message={alertMessage}
+                onClose={() => setAlertVisible(false)}
+            />
         </View>
     );
 }

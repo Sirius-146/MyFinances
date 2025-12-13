@@ -7,6 +7,7 @@ export default function ModernInput({
     onChangeText,
     placeholder,
     keyboardType,
+    autoCapitalize = "words",
 }) {
     const [isFocused, setIsFocused] = useState(false);
     const borderAnim = useRef(new Animated.Value(1)).current; // 1 = normal, 2 = foco
@@ -43,6 +44,7 @@ export default function ModernInput({
                 placeholderTextColor="#666"
                 style={styles.input}
                 keyboardType={keyboardType}
+                autoCapitalize={autoCapitalize}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
             />

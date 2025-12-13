@@ -10,9 +10,8 @@ function isEmailValid(email) {
  * Módulo para registro de usuários utilizando Firebase Auth.
  *
  * @param {string} user - Nome do usuário.
- * @param {string} password - Senha.
  * @param {string} email - E-mail.
- * @returns {string} - Nome do usuário criado.
+ * @param {string} password - Senha.
  * @throws {Error} - Em caso de email inválido ou email já registrado.
  */
 async function createUser(name, email, password) {
@@ -31,11 +30,9 @@ async function createUser(name, email, password) {
 
         // 2. Criar documento no Firestore (somente dados públicos)
         await setDoc(doc(db, "users", uid), {
-            name: name,
+            name,
             createdAt: new Date().toISOString(),
         });
-
-        return name;
     } catch (error) {
         if (error.code === "auth/email-already-in-use") {
             throw new Error("Email já está cadastrado!");

@@ -7,7 +7,6 @@ import { auth } from "../lib/firebase";
  *
  * @param {string} email - email de usuário.
  * @param {string} password - Senha.
- * @returns {string} - UID do usuário autenticado.
  */
 async function loginUser(email, password) {
     try {
@@ -23,11 +22,13 @@ async function loginUser(email, password) {
         }
 
         if (error.code === "auth/wrong-password") {
-            throw new Error("Senha incorreta!");
+            throw new Error("Email ou senha incorretos!");
+        }
+        if (error.code === "auth/invalid-email") {
+            throw new Error("Email inválido!");
         }
 
-        console.error("Erro ao fazer login:", error);
-        throw new Error("Erro ao fazer login. Tente novamente.");
+        throw new Error("Erro inesperado ao autenticar. Tente novamente.");
     }
 }
 

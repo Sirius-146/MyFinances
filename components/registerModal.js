@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import { ActivityIndicator, Modal, View } from "react-native";
 import createUser from "../services/createUser";
@@ -6,7 +5,13 @@ import ModernButton from "../utils/ModernButton";
 import ModernInput from "../utils/ModernInput";
 import PasswordField from "../utils/Passwordfield";
 
-export default function RegisterModal({ visible, onClose, onSuccess, styles }) {
+export default function RegisterModal({
+    visible,
+    onClose,
+    onSuccess,
+    onError,
+    styles,
+}) {
     const [user, setUser] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -25,8 +30,9 @@ export default function RegisterModal({ visible, onClose, onSuccess, styles }) {
     async function handleRegister() {
         setPasswordError(null);
         setRepSenhaError(null);
+
         if (!user || !email || !password || !repPassword) {
-            alert("Preencha todos os campos!");
+            onError?.("Preencha todos os campos!");
             return;
         }
         if (password.length < 6) {
@@ -41,19 +47,12 @@ export default function RegisterModal({ visible, onClose, onSuccess, styles }) {
         try {
             setLoadingVisible(true);
 
-            const uid = await createUser(user, email, password);
+            await createUser(user, email, password);
 
-            await AsyncStorage.setItem("user", uid);
-
+            onSuccess({ justRegistered: true });
             resetFields();
-
-            if (uid) {
-                alert("Usuário criado");
-                onSuccess();
-            }
         } catch (error) {
-            console.error(error);
-            alert("Erro ao criar usuário");
+            onError?.(error.message || "Erro ao criar usuário");
         } finally {
             setLoadingVisible(false);
         }
@@ -79,6 +78,7 @@ export default function RegisterModal({ visible, onClose, onSuccess, styles }) {
                             onChangeText={setEmail}
                             placeholder="Digite o e-mail"
                             keyboardType="email-address"
+                            autoCapitalize="none"
                         />
                         <PasswordField
                             value={password}
