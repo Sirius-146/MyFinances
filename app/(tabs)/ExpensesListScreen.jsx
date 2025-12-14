@@ -47,7 +47,10 @@ export default function ExpensesListScreen() {
             setLoading(true);
 
             // 1) Carregar sempre do armazenamento local
-            const localData = await getLocalExpenses(user.uid, selectedMonth);
+            const localData = await getLocalExpenses(
+                user.uid,
+                `@expenses/${selectedMonth}`
+            );
             setExpenses(localData);
             setFilteredExpenses(localData);
 
@@ -102,6 +105,8 @@ export default function ExpensesListScreen() {
         } catch (error) {
             alert("Houve um problema ao excluir");
             console.log(error);
+        } finally {
+            loadExpenses();
         }
     }
 

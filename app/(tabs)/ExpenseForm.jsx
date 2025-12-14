@@ -2,42 +2,65 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import {
     Keyboard,
+    StyleSheet,
+    TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
     View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Button, Card, HelperText, Text, TextInput } from "react-native-paper";
+
+import ModernButton from "../../utils/ModernButton";
 
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 import * as yup from "yup";
 
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
 import { useThemeColor } from "@/hooks/use-theme-color";
+
 import { CATEGORY_OPTIONS } from "../../constants/categories";
 import { PAYMENT_OPTIONS } from "../../constants/payments";
 import { auth } from "../../lib/firebase";
-import {
-    saveExpenseLocal,
-    updateExpenseLocal,
-} from "../../services/localExpensesService";
+import { saveExpenseLocal } from "../../services/localExpensesService";
 
 // ----------------------------
-// VALIDAÇÃO COM YUP
+// VALIDAÇÃO
 // ----------------------------
 const schema = yup.object({
     category: yup.string().required("Selecione uma categoria."),
     value: yup
         .number()
+        .min(1, "Informe um valor maior que zero.")
         .typeError("Informe um valor numérico.")
         .positive("O valor deve ser positivo.")
         .required("Valor é obrigatório."),
     date: yup.string().required("A data é obrigatória."),
     description: yup.string().max(200, "Máximo de 200 caracteres."),
-    payment: yup.string().required("Informe a forma de pagamento"),
+    payment: yup.string().required("Informe a forma de pagamento."),
 });
 
-export default function ExpenseForm({ existingData = null }) {
+function formatCurrencyFromCents(cents) {
+    const value = (cents / 100).toFixed(2);
+    return value.replace(".", ",");
+}
+
+function onlyNumbers(text) {
+    return Number(text.replace(/\D/g, "")) || 0;
+}
+
+export default function ExpenseForm() {
+    const inputBg = useThemeColor(
+        { light: "#f5f5f5", dark: "#1a1a1a" },
+        "background"
+    );
+    const border = useThemeColor({ light: "#ccc", dark: "#444" }, "text");
+    const text = useThemeColor({ light: "#333", dark: "#eee" }, "text");
+    const placeholder = useThemeColor({ light: "#666", dark: "#aaa" }, "text");
+
+    const user = auth.currentUser;
+
     const {
         control,
         handleSubmit,
@@ -45,95 +68,44 @@ export default function ExpenseForm({ existingData = null }) {
         formState: { errors, isValid },
     } = useForm({
         defaultValues: {
-            category: existingData?.category || "",
-            value: existingData?.value?.toString() || "",
-            date: existingData?.date || "",
-            description: existingData?.description || "",
-            payment: existingData?.payment || "",
+            category: "",
+            value: 0,
+            date: "",
+            description: "",
+            payment: "",
         },
         resolver: yupResolver(schema),
         mode: "onChange",
     });
 
-    const user = auth.currentUser;
     const [openCategory, setOpenCategory] = useState(false);
-    const [showDatePicker, setShowDatePicker] = useState(false);
     const [openPayment, setOpenPayment] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
-    // cores do tema do seu app (hook customizado)
-    const background = useThemeColor({}, "background");
-    const textColor = useThemeColor({}, "text");
-    const cardColor = useThemeColor({}, "card");
-    const borderColor = useThemeColor(
-        { light: "#ccc", dark: "#444" },
-        "border"
-    );
+    function onSubmit(data) {
+        const payload = {
+            ...data,
+            value: data.value / 100,
+        };
+        saveExpenseLocal(payload, user.uid);
 
-    const handleCreate = async (payload) => {
-        try {
-            await saveExpenseLocal(payload, user.uid);
-            alert("Registro criado com sucesso!");
-        } catch (error) {
-            alert("Houve um problema ao salvar");
-            console.log(error);
-        }
-    };
-
-    const handleUpdate = async (id, payload) => {
-        try {
-            await updateExpenseLocal(id, payload, user.uid);
-            alert("Atualizado com sucesso!");
-        } catch (error) {
-            alert("Houve um problema ao atualizar");
-            console.log(error);
-        }
-    };
-
-    const onSubmit = (data) => {
-        if (existingData?.id) {
-            handleUpdate(existingData.id, data);
-        } else {
-            handleCreate(data);
-        }
-
-        reset({
-            category: "",
-            payment: "",
-            value: "",
-            date: "",
-            description: "",
-        });
-
+        reset();
         setOpenCategory(false);
         setOpenPayment(false);
-    };
+    }
 
     return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <View
-                style={{
-                    padding: 20,
-                    marginTop: 50,
-                    backgroundColor: background,
-                }}
-            >
-                <Card
-                    mode="contained"
-                    style={{ padding: 16, backgroundColor: cardColor }}
-                >
-                    <Text
-                        variant="titleLarge"
-                        style={{ marginBottom: 16, color: textColor }}
-                    >
-                        {existingData ? "Editar Despesa" : "Registrar Despesa"}
-                    </Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <ThemedView style={styles.screen}>
+                <ThemedView style={styles.card}>
+                    <ThemedText style={[styles.title, { color: text }]}>
+                        Registrar Despesa
+                    </ThemedText>
 
-                    {/* ----------------------------
-              CATEGORIA (DROPDOWN PICKER)
-          ----------------------------- */}
-                    <Text style={{ marginBottom: 4, color: textColor }}>
+                    {/* CATEGORIA */}
+                    <ThemedText style={[styles.label, { color: text }]}>
                         Categoria
-                    </Text>
+                    </ThemedText>
 
                     <Controller
                         control={control}
@@ -145,73 +117,90 @@ export default function ExpenseForm({ existingData = null }) {
                                     value={value}
                                     items={CATEGORY_OPTIONS}
                                     setOpen={setOpenCategory}
-                                    onOpen={() => Keyboard.dismiss()}
-                                    setValue={(callback) =>
-                                        onChange(callback(value))
-                                    }
+                                    setValue={(cb) => onChange(cb(value))}
+                                    onOpen={Keyboard.dismiss}
                                     placeholder="Selecione uma categoria"
                                     style={{
-                                        marginBottom: errors.category ? 0 : 16,
-                                        backgroundColor: background,
-                                        borderColor: borderColor,
+                                        backgroundColor: inputBg,
+                                        borderColor: border,
                                     }}
                                     dropDownContainerStyle={{
-                                        backgroundColor: background,
-                                        borderColor: borderColor,
+                                        backgroundColor: inputBg,
+                                        borderColor: border,
                                     }}
-                                    textStyle={{ color: textColor }}
+                                    textStyle={{ color: text }}
                                 />
                                 {errors.category && (
-                                    <HelperText type="error">
+                                    <ThemedText style={styles.error}>
                                         {errors.category.message}
-                                    </HelperText>
+                                    </ThemedText>
                                 )}
                             </>
                         )}
                     />
 
-                    {/* ----------------------------
-              VALOR
-          ----------------------------- */}
+                    {/* VALOR */}
                     <Controller
                         control={control}
                         name="value"
-                        render={({ field: { onChange, value } }) => (
-                            <>
-                                <TextInput
-                                    label="Valor (R$)"
-                                    mode="outlined"
-                                    keyboardType="numeric"
-                                    value={value}
-                                    onChangeText={onChange}
-                                    style={{ marginTop: 8 }}
-                                    outlineColor={borderColor}
-                                />
-                                {errors.value && (
-                                    <HelperText type="error">
-                                        {errors.value.message}
-                                    </HelperText>
-                                )}
-                            </>
-                        )}
+                        render={({ field: { onChange, value } }) => {
+                            const cents = Number(value) || 0;
+                            const formattedValue =
+                                formatCurrencyFromCents(cents);
+
+                            return (
+                                <>
+                                    <ThemedText
+                                        style={[styles.label, { color: text }]}
+                                    >
+                                        Valor
+                                    </ThemedText>
+
+                                    <TextInput
+                                        value={formattedValue}
+                                        keyboardType="numeric"
+                                        placeholder="0,00"
+                                        placeholderTextColor={placeholder}
+                                        onChangeText={(text) => {
+                                            const numericValue =
+                                                onlyNumbers(text);
+                                            onChange(numericValue);
+                                        }}
+                                        style={[
+                                            styles.input,
+                                            {
+                                                backgroundColor: inputBg,
+                                                borderColor: border,
+                                                color: text,
+                                            },
+                                        ]}
+                                    />
+                                    {errors.value && (
+                                        <ThemedText style={styles.error}>
+                                            {errors.value.message}
+                                        </ThemedText>
+                                    )}
+                                </>
+                            );
+                        }}
                     />
 
-                    {/* ----------------------------
-              DATA (DATE PICKER)
-          ----------------------------- */}
+                    {/* DATA */}
                     <Controller
                         control={control}
                         name="date"
                         render={({ field: { onChange, value } }) => {
-                            const displayDate = value
-                                ? (() => {
-                                      const [y, m, d] = value.split("-");
-                                      return `${d}/${m}/${y}`;
-                                  })()
+                            const formatted = value
+                                ? value.split("-").reverse().join("/")
                                 : "";
 
                             return (
                                 <>
+                                    <ThemedText
+                                        style={[styles.label, { color: text }]}
+                                    >
+                                        Data
+                                    </ThemedText>
                                     <TouchableOpacity
                                         onPress={() => {
                                             Keyboard.dismiss();
@@ -219,47 +208,49 @@ export default function ExpenseForm({ existingData = null }) {
                                         }}
                                     >
                                         <TextInput
-                                            label="Data"
-                                            mode="outlined"
-                                            value={displayDate}
+                                            value={formatted}
                                             editable={false}
-                                            pointerEvents="none"
-                                            style={{ marginTop: 8 }}
-                                            outlineColor={borderColor}
+                                            placeholder="Data"
+                                            placeholderTextColor={placeholder}
+                                            style={[
+                                                styles.input,
+                                                {
+                                                    backgroundColor: inputBg,
+                                                    borderColor: border,
+                                                    color: text,
+                                                },
+                                            ]}
                                         />
                                     </TouchableOpacity>
 
                                     {errors.date && (
-                                        <HelperText type="error">
+                                        <ThemedText style={styles.error}>
                                             {errors.date.message}
-                                        </HelperText>
+                                        </ThemedText>
                                     )}
 
                                     {showDatePicker && (
                                         <DateTimePicker
                                             mode="date"
-                                            display="calendar"
                                             value={
                                                 value
                                                     ? new Date(value)
                                                     : new Date()
                                             }
-                                            onChange={(event, selectedDate) => {
+                                            onChange={(_, selected) => {
                                                 setShowDatePicker(false);
+                                                if (!selected) return;
 
-                                                if (selectedDate) {
-                                                    const y =
-                                                        selectedDate.getFullYear();
-                                                    const m = String(
-                                                        selectedDate.getMonth() +
-                                                            1
-                                                    ).padStart(2, "0");
-                                                    const d = String(
-                                                        selectedDate.getDate()
-                                                    ).padStart(2, "0");
+                                                const y =
+                                                    selected.getFullYear();
+                                                const m = String(
+                                                    selected.getMonth() + 1
+                                                ).padStart(2, "0");
+                                                const d = String(
+                                                    selected.getDate()
+                                                ).padStart(2, "0");
 
-                                                    onChange(`${y}-${m}-${d}`);
-                                                }
+                                                onChange(`${y}-${m}-${d}`);
                                             }}
                                         />
                                     )}
@@ -268,44 +259,41 @@ export default function ExpenseForm({ existingData = null }) {
                         }}
                     />
 
-                    {/* ----------------------------
-              DESCRIÇÃO
-          ----------------------------- */}
+                    {/* DESCRIÇÃO */}
                     <Controller
                         control={control}
                         name="description"
                         render={({ field: { onChange, value } }) => (
                             <>
+                                <ThemedText
+                                    style={[styles.label, { color: text }]}
+                                >
+                                    Descrição
+                                </ThemedText>
                                 <TextInput
-                                    label="Descrição (opcional)"
-                                    mode="outlined"
                                     value={value}
                                     onChangeText={onChange}
                                     multiline
-                                    style={{ marginTop: 8 }}
-                                    outlineColor={borderColor}
+                                    placeholder="Descrição (opcional)"
+                                    placeholderTextColor={placeholder}
+                                    style={[
+                                        styles.input,
+                                        styles.multiline,
+                                        {
+                                            backgroundColor: inputBg,
+                                            borderColor: border,
+                                            color: text,
+                                        },
+                                    ]}
                                 />
-                                {errors.description && (
-                                    <HelperText type="error">
-                                        {errors.description.message}
-                                    </HelperText>
-                                )}
                             </>
                         )}
                     />
 
-                    {/* ---------------------------------------
-            FORMA DE PAGAMENTO (DROPDOWN)
-          ---------------------------------------- */}
-                    <Text
-                        style={{
-                            marginBottom: 4,
-                            marginTop: 10,
-                            color: textColor,
-                        }}
-                    >
-                        Forma de Pagamento
-                    </Text>
+                    {/* PAGAMENTO */}
+                    <ThemedText style={[styles.label, { color: text }]}>
+                        Forma de pagamento
+                    </ThemedText>
 
                     <Controller
                         control={control}
@@ -313,49 +301,83 @@ export default function ExpenseForm({ existingData = null }) {
                         render={({ field: { onChange, value } }) => (
                             <>
                                 <DropDownPicker
-                                    open={openPayment} // você vai adicionar esse state logo abaixo
+                                    open={openPayment}
                                     value={value}
                                     items={PAYMENT_OPTIONS}
                                     setOpen={setOpenPayment}
-                                    onOpen={() => Keyboard.dismiss()}
-                                    setValue={(callback) =>
-                                        onChange(callback(value))
-                                    }
+                                    setValue={(cb) => onChange(cb(value))}
+                                    onOpen={Keyboard.dismiss}
                                     placeholder="Selecione a forma de pagamento"
                                     style={{
-                                        marginBottom: errors.payment ? 0 : 16,
-                                        backgroundColor: background,
-                                        borderColor: borderColor,
+                                        backgroundColor: inputBg,
+                                        borderColor: border,
                                     }}
                                     dropDownContainerStyle={{
-                                        backgroundColor: background,
-                                        borderColor: borderColor,
+                                        backgroundColor: inputBg,
+                                        borderColor: border,
                                     }}
-                                    textStyle={{ color: textColor }}
+                                    textStyle={{ color: text }}
                                 />
-
                                 {errors.payment && (
-                                    <HelperText type="error">
+                                    <ThemedText style={styles.error}>
                                         {errors.payment.message}
-                                    </HelperText>
+                                    </ThemedText>
                                 )}
                             </>
                         )}
                     />
-
-                    {/* ----------------------------
-              BOTÃO DE ENVIO
-          ----------------------------- */}
-                    <Button
-                        mode="contained"
+                </ThemedView>
+                <View
+                    style={{ width: "60%", alignSelf: "center", marginTop: 20 }}
+                >
+                    <ModernButton
+                        text="Registrar"
                         onPress={handleSubmit(onSubmit)}
+                        icon="save"
                         disabled={!isValid}
-                        style={{ marginTop: 20 }}
-                    >
-                        {existingData ? "Salvar Alterações" : "Registrar"}
-                    </Button>
-                </Card>
-            </View>
+                        colors={!isValid ? undefined : ["#007bff", "#0056d6"]}
+                    />
+                </View>
+            </ThemedView>
         </TouchableWithoutFeedback>
     );
 }
+
+const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+        padding: 12,
+        marginTop: 20,
+    },
+    card: {
+        padding: 16,
+        borderRadius: 12,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: "600",
+        marginBottom: 16,
+    },
+    label: {
+        marginTop: 12,
+        marginBottom: 6,
+        fontSize: 14,
+    },
+    input: {
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        fontSize: 14,
+        marginBottom: 6,
+    },
+    multiline: {
+        minHeight: 80,
+        textAlignVertical: "top",
+    },
+    error: {
+        color: "#E53935",
+        fontSize: 12,
+        marginBottom: 6,
+    },
+});
