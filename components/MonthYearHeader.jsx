@@ -1,16 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { FlatList, Modal, Text, TouchableOpacity, View } from "react-native";
-import Animated, {
-    FadeIn,
-    FadeOut,
-    SlideInLeft,
-    SlideInRight,
-    SlideInUp,
-    SlideOutDown,
-    SlideOutLeft,
-    SlideOutRight,
-} from "react-native-reanimated";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import DropDownPicker from "react-native-dropdown-picker";
 
 function getMonthKey(date) {
     const year = date.getFullYear();
@@ -25,15 +16,19 @@ function parseMonthKey(key) {
 
 function formatMonthYear(key) {
     const date = parseMonthKey(key);
-    return date.toLocaleDateString("pt-BR", {
+    const final = date.toLocaleDateString("pt-BR", {
         month: "long",
         year: "numeric",
     });
+    const m = final.split(" ")[0];
+    const y = final.split(" ")[2];
+    return `${m} - ${y}`;
 }
 
 export default function MonthYearHeader({ value, onChange, COLORS }) {
-    const [visible, setVisible] = useState(false);
     const [direction, setDirection] = useState("right"); //controla slide
+
+    const [openMonthList, setOpenMonthList] = useState(false);
 
     function prevMonth() {
         const d = parseMonthKey(value);
@@ -57,37 +52,41 @@ export default function MonthYearHeader({ value, onChange, COLORS }) {
         };
     });
 
-    const enteringAnim = direction === "right" ? SlideInRight : SlideInLeft;
-    const exitingAnim = direction === "right" ? SlideOutLeft : SlideOutRight;
-
     return (
-        <View
-            style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 15,
-            }}
-        >
+        <View style={styles.container}>
             <TouchableOpacity onPress={prevMonth}>
                 <Ionicons name="chevron-back" size={26} color={COLORS.text} />
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => setVisible(true)}>
-                <Animated.Text
-                    key={value}
-                    entering={enteringAnim}
-                    exiting={exitingAnim}
-                    style={{
-                        fontSize: 18,
-                        fontWeight: "bold",
-                        color: COLORS.text,
-                        textTransform: "capitalize",
+            <View style={{ width: "80%", alignItems: "center" }}>
+                <DropDownPicker
+                    open={openMonthList}
+                    value={value}
+                    items={months}
+                    setOpen={setOpenMonthList}
+                    setValue={onChange}
+                    setItems={() => {}}
+                    listMode="SCROLLVIEW"
+                    showArrowIcon={false}
+                    showTickIcon={false}
+                    placeholder={formatMonthYear(value)}
+                    style={styles.dropdown}
+                    textStyle={{ ...styles.dropdownText, color: COLORS.text }}
+                    dropDownContainerStyle={{
+                        backgroundColor: COLORS.card,
+                        borderColor: COLORS.border,
+                        borderTopWidth: 0,
+                        borderRadius: 12,
+                        marginTop: 8,
                     }}
-                >
-                    {formatMonthYear(value)}
-                </Animated.Text>
-            </TouchableOpacity>
+                    listItemLabelStyle={{ color: COLORS.text }}
+                    selectedItemLabelStyle={{
+                        fontWeight: "bold",
+                        color: COLORS.primary ?? COLORS.text,
+                    }}
+                    // zIndex={901}
+                />
+            </View>
 
             <TouchableOpacity onPress={nextMonth}>
                 <Ionicons
@@ -96,53 +95,26 @@ export default function MonthYearHeader({ value, onChange, COLORS }) {
                     color={COLORS.text}
                 />
             </TouchableOpacity>
-
-            <Modal transparent visible={visible} animationType="none">
-                <Animated.View
-                    entering={FadeIn}
-                    exiting={FadeOut}
-                    style={{
-                        flex: 1,
-                        backgroundColor: "rgba(0,0,0,0.5)",
-                        justifyContent: "center",
-                        alignItems: "center",
-                    }}
-                >
-                    <Animated.View
-                        entering={SlideInUp}
-                        exiting={SlideOutDown}
-                        style={{
-                            backgroundColor: COLORS.card,
-                            borderRadius: 12,
-                            padding: 20,
-                            width: "80%",
-                        }}
-                    >
-                        <FlatList
-                            data={months}
-                            keyExtractor={(item) => item.value}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        onChange(item.value);
-                                        setVisible(false);
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            padding: 10,
-                                            color: COLORS.text,
-                                            textTransform: "capitalize",
-                                        }}
-                                    >
-                                        {item.label}
-                                    </Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-                    </Animated.View>
-                </Animated.View>
-            </Modal>
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 15,
+    },
+    dropdown: {
+        backgroundColor: "transparent",
+        borderWidth: 0,
+        minHeight: 40,
+    },
+    dropdownText: {
+        fontSize: 18,
+        fontWeight: "bold",
+        textTransform: "capitalize",
+        textAlign: "center",
+    },
+});

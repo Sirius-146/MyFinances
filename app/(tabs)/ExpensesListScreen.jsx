@@ -148,7 +148,7 @@ export default function ExpensesListScreen() {
                 }}
                 labelStyle={{ color: COLORS.text }}
                 listItemLabelStyle={{ color: COLORS.text }}
-                zIndex={999}
+                zIndex={100}
             />
             {loading ? (
                 <ActivityIndicator size="large" />
