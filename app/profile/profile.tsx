@@ -1,6 +1,6 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useAppColors } from "@/hooks/use-app-colors";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { User, updateEmail } from "firebase/auth";
@@ -20,13 +20,7 @@ import ModernButton from "../../utils/ModernButton";
 import styles from "./styles/styles";
 
 export default function Perfil() {
-    const inputBg = useThemeColor(
-        { light: "#f5f5f5", dark: "#1a1a1a" },
-        "background"
-    );
-    const border = useThemeColor({ light: "#ccc", dark: "#444" }, "text");
-    const text = useThemeColor({ light: "#333", dark: "#eee" }, "text");
-    const icon = useThemeColor({ light: "#000", dark: "#fff" }, "text");
+    const COLORS = useAppColors();
 
     const user: User | null = auth.currentUser;
 
@@ -154,7 +148,7 @@ export default function Perfil() {
                 <TouchableOpacity
                     onPress={() => router.push("/profile/SettingsScreen")}
                 >
-                    <FontAwesome5 name={"cog"} size={22} color={icon} />
+                    <FontAwesome5 name={"cog"} size={22} color={COLORS.icon} />
                 </TouchableOpacity>
             </View>
 
@@ -163,7 +157,9 @@ export default function Perfil() {
                     source={require("../../assets/images/perfil.png")}
                     style={styles.image}
                 />
-                <ThemedText style={[styles.textUserName, { color: text }]}>
+                <ThemedText
+                    style={[styles.textUserName, { color: COLORS.text }]}
+                >
                     {profileName}
                 </ThemedText>
             </ThemedView>
@@ -172,7 +168,9 @@ export default function Perfil() {
                 <View>
                     {campos.map((campo, index) => (
                         <View key={index}>
-                            <ThemedText style={[styles.label, { color: text }]}>
+                            <ThemedText
+                                style={[styles.label, { color: COLORS.text }]}
+                            >
                                 {campo.label}
                             </ThemedText>
                             <TextInput
@@ -184,16 +182,16 @@ export default function Perfil() {
                                 style={[
                                     styles.inputProfile,
                                     {
-                                        backgroundColor: inputBg,
-                                        borderColor: border,
-                                        color: text,
+                                        backgroundColor: COLORS.inputBg,
+                                        borderColor: COLORS.border,
+                                        color: COLORS.text,
                                     },
                                 ]}
                             />
                         </View>
                     ))}
 
-                    <ThemedText style={[styles.label, { color: text }]}>
+                    <ThemedText style={[styles.label, { color: COLORS.text }]}>
                         Senha
                     </ThemedText>
                     <TouchableOpacity
@@ -208,16 +206,13 @@ export default function Perfil() {
                             editable={false}
                             secureTextEntry={true}
                             pointerEvents="none"
-                            placeholderTextColor={useThemeColor(
-                                { light: "#666", dark: "#aaa" },
-                                "text"
-                            )}
+                            placeholderTextColor={COLORS.placeholder}
                             style={[
                                 styles.inputProfile,
                                 {
-                                    backgroundColor: inputBg,
-                                    borderColor: border,
-                                    color: text,
+                                    backgroundColor: COLORS.inputBg,
+                                    borderColor: COLORS.border,
+                                    color: COLORS.text,
                                 },
                             ]}
                         />

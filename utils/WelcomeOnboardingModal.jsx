@@ -1,8 +1,10 @@
+import { useAppColors } from "@/hooks/use-app-colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function WelcomeOnboardingModal({ visible, onFinish }) {
+    const COLORS = useAppColors();
     const [step, setStep] = useState(1);
 
     function handleNext() {
@@ -24,8 +26,12 @@ export default function WelcomeOnboardingModal({ visible, onFinish }) {
                             size={48}
                             color={"#4CAF50"}
                         />
-                        <Text style={styles.title}>Bem-vindo!</Text>
-                        <Text style={styles.text}>
+                        <Text style={[styles.title, { color: COLORS.text }]}>
+                            Bem-vindo!
+                        </Text>
+                        <Text
+                            style={[styles.text, { color: COLORS.placeholder }]}
+                        >
                             Sua conta foi criada com sucesso.
                             {"\n\n"}
                             Aqui você terá controle total sobre seus ganhos e
@@ -41,8 +47,12 @@ export default function WelcomeOnboardingModal({ visible, onFinish }) {
                             size={48}
                             color={"#2196F3"}
                         />
-                        <Text style={styles.title}>Como o app funciona</Text>
-                        <Text style={styles.text}>
+                        <Text style={[styles.title, { color: COLORS.text }]}>
+                            Como o app funciona
+                        </Text>
+                        <Text
+                            style={[styles.text, { color: COLORS.placeholder }]}
+                        >
                             • Registre despesas e receitas{"\n"}• Acompanhe sua
                             evolução mensal{"\n"}• Visualize seus dados de forma
                             clara e simples
@@ -57,8 +67,12 @@ export default function WelcomeOnboardingModal({ visible, onFinish }) {
                             size={48}
                             color={"#FF9800"}
                         />
-                        <Text style={styles.title}>Comece agora</Text>
-                        <Text style={styles.text}>
+                        <Text style={[styles.title, { color: COLORS.text }]}>
+                            Comece agora
+                        </Text>
+                        <Text
+                            style={[styles.text, { color: COLORS.placeholder }]}
+                        >
                             Quanto antes você registrar seus dados,
                             {"\n"}
                             melhor será sua visão financeira.
@@ -73,7 +87,12 @@ export default function WelcomeOnboardingModal({ visible, onFinish }) {
     return (
         <Modal visible={visible} animationType="slide" transparent>
             <View style={styles.overlay}>
-                <View style={styles.container}>
+                <View
+                    style={[
+                        styles.container,
+                        { backgroundColor: COLORS.background },
+                    ]}
+                >
                     {renderContent()}
 
                     <TouchableOpacity
@@ -101,7 +120,6 @@ const styles = StyleSheet.create({
     },
     container: {
         width: "90%",
-        backgroundColor: "#fff",
         borderRadius: 16,
         padding: 24,
         alignItems: "center",
@@ -115,7 +133,6 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 15,
-        color: "#555",
         textAlign: "center",
         marginBottom: 24,
     },

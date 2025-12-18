@@ -1,3 +1,4 @@
+import { useAppColors } from "@/hooks/use-app-colors";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
@@ -10,14 +11,13 @@ import {
     deleteExpenseLocal,
     getLocalExpenses,
 } from "../../services/localExpensesService";
-import { getTheme } from "../../styles/theme";
 import ExpenseCard from "../../utils/ExpensesCard";
 import { mergeLocalAndRemote } from "../../utils/mergeLocalAndRemote";
 import ModalExpenseDetails from "../../utils/ModalExpenseDetails";
 import { isOnline } from "../../utils/network";
 
 export default function ExpensesListScreen() {
-    const COLORS = getTheme();
+    const COLORS = useAppColors();
 
     const user = auth.currentUser;
 
@@ -169,6 +169,7 @@ export default function ExpensesListScreen() {
                                 setShowModal(true);
                             }}
                             onDeletePress={() => handleDelete(item.id)}
+                            colors={COLORS}
                         />
                     )}
                 />

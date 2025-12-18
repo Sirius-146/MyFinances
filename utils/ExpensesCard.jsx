@@ -2,7 +2,6 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInUp, FadeOut } from "react-native-reanimated";
 import { CATEGORY_LABELS } from "../constants/categories";
-import { getTheme } from "../styles/theme";
 import { CategoryIcon } from "./categoryIcons";
 
 function parseDateAsLocal(dateStr) {
@@ -11,15 +10,13 @@ function parseDateAsLocal(dateStr) {
     return new Date(year, month - 1, day);
 }
 
-export default function ExpenseCard({ item, onPress, onDeletePress }) {
-    const COLORS = getTheme();
-
+export default function ExpenseCard({ item, onPress, onDeletePress, colors }) {
     return (
         <Animated.View
             entering={FadeInUp.duration(300)}
             exiting={FadeOut.duration(200)}
             style={{
-                backgroundColor: COLORS.card,
+                backgroundColor: colors.card,
                 padding: 14,
                 marginBottom: 12,
                 borderRadius: 14,
@@ -35,22 +32,22 @@ export default function ExpenseCard({ item, onPress, onDeletePress }) {
                 <CategoryIcon
                     category={item.category}
                     size={26}
-                    color={COLORS.primary}
+                    color={colors.icon}
                 />
             </View>
 
             {/* Conteúdo */}
             <TouchableOpacity style={{ flex: 1 }} onPress={onPress}>
-                <Text style={{ fontSize: 18, color: COLORS.text }}>
+                <Text style={{ fontSize: 18, color: colors.text }}>
                     {item.description}
                 </Text>
 
-                <Text style={{ color: COLORS.textSecondary }}>
+                <Text style={{ color: colors.textSecondary }}>
                     {CATEGORY_LABELS[item.category] || item.category} ·{" "}
                     {item.payment}
                 </Text>
 
-                <Text style={{ color: COLORS.textSecondary }}>
+                <Text style={{ color: colors.textSecondary }}>
                     {(() => {
                         const d = parseDateAsLocal(item.date);
                         return d ? d.toLocaleDateString("pt-BR") : "";
@@ -63,7 +60,7 @@ export default function ExpenseCard({ item, onPress, onDeletePress }) {
                 style={{
                     fontWeight: "bold",
                     fontSize: 16,
-                    color: COLORS.primary,
+                    color: colors.icon,
                 }}
             >
                 R$ {Number(item.value).toFixed(2)}

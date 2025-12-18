@@ -1,11 +1,13 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
 import { useEffect, useState } from "react";
 import WelcomeOnboardingModal from "../../utils/WelcomeOnboardingModal";
 
+import { useAppColors } from "@/hooks/use-app-colors";
 import { useLocalSearchParams } from "expo-router";
 
 export default function HomeScreen() {
+    const COLORS = useAppColors();
     const { justRegistered } = useLocalSearchParams();
     const [welcomeVisible, setWelcomeVisible] = useState(false);
 
@@ -31,7 +33,7 @@ export default function HomeScreen() {
         //     </ThemedView>
         // </ParallaxScrollView>
 
-        <View style={styles.container}>
+        <View style={{ flex: 1, backgroundColor: COLORS.background }}>
             {/* 
               Conteúdo da Home virá aqui futuramente 
               (dashboard, resumo financeiro, etc.)
@@ -43,10 +45,3 @@ export default function HomeScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#FFF",
-    },
-});

@@ -2,7 +2,6 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import {
     Keyboard,
-    StyleSheet,
     TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
@@ -18,12 +17,14 @@ import * as yup from "yup";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useAppColors } from "@/hooks/use-app-colors";
 
 import { CATEGORY_OPTIONS } from "../../constants/categories";
 import { PAYMENT_OPTIONS } from "../../constants/payments";
 import { auth } from "../../lib/firebase";
 import { saveExpenseLocal } from "../../services/localExpensesService";
+
+import styles from "../../styles/FormStyles";
 
 // ----------------------------
 // VALIDAÇÃO
@@ -51,13 +52,7 @@ function onlyNumbers(text) {
 }
 
 export default function ExpenseForm() {
-    const inputBg = useThemeColor(
-        { light: "#f5f5f5", dark: "#1a1a1a" },
-        "background"
-    );
-    const border = useThemeColor({ light: "#ccc", dark: "#444" }, "text");
-    const text = useThemeColor({ light: "#333", dark: "#eee" }, "text");
-    const placeholder = useThemeColor({ light: "#666", dark: "#aaa" }, "text");
+    const COLORS = useAppColors();
 
     const user = auth.currentUser;
 
@@ -98,12 +93,12 @@ export default function ExpenseForm() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <ThemedView style={styles.screen}>
                 <ThemedView style={styles.card}>
-                    <ThemedText style={[styles.title, { color: text }]}>
+                    <ThemedText style={[styles.title, { color: COLORS.text }]}>
                         Registrar Despesa
                     </ThemedText>
 
                     {/* CATEGORIA */}
-                    <ThemedText style={[styles.label, { color: text }]}>
+                    <ThemedText style={[styles.label, { color: COLORS.text }]}>
                         Categoria
                     </ThemedText>
 
@@ -121,14 +116,14 @@ export default function ExpenseForm() {
                                     onOpen={Keyboard.dismiss}
                                     placeholder="Selecione uma categoria"
                                     style={{
-                                        backgroundColor: inputBg,
-                                        borderColor: border,
+                                        backgroundColor: COLORS.inputBg,
+                                        borderColor: COLORS.border,
                                     }}
                                     dropDownContainerStyle={{
-                                        backgroundColor: inputBg,
-                                        borderColor: border,
+                                        backgroundColor: COLORS.inputBg,
+                                        borderColor: COLORS.border,
                                     }}
-                                    textStyle={{ color: text }}
+                                    textStyle={{ color: COLORS.text }}
                                 />
                                 {errors.category && (
                                     <ThemedText style={styles.error}>
@@ -151,7 +146,10 @@ export default function ExpenseForm() {
                             return (
                                 <>
                                     <ThemedText
-                                        style={[styles.label, { color: text }]}
+                                        style={[
+                                            styles.label,
+                                            { color: COLORS.text },
+                                        ]}
                                     >
                                         Valor
                                     </ThemedText>
@@ -160,7 +158,9 @@ export default function ExpenseForm() {
                                         value={formattedValue}
                                         keyboardType="numeric"
                                         placeholder="0,00"
-                                        placeholderTextColor={placeholder}
+                                        placeholderTextColor={
+                                            COLORS.placeholder
+                                        }
                                         onChangeText={(text) => {
                                             const numericValue =
                                                 onlyNumbers(text);
@@ -169,9 +169,9 @@ export default function ExpenseForm() {
                                         style={[
                                             styles.input,
                                             {
-                                                backgroundColor: inputBg,
-                                                borderColor: border,
-                                                color: text,
+                                                backgroundColor: COLORS.inputBg,
+                                                borderColor: COLORS.border,
+                                                color: COLORS.text,
                                             },
                                         ]}
                                     />
@@ -197,7 +197,10 @@ export default function ExpenseForm() {
                             return (
                                 <>
                                     <ThemedText
-                                        style={[styles.label, { color: text }]}
+                                        style={[
+                                            styles.label,
+                                            { color: COLORS.text },
+                                        ]}
                                     >
                                         Data
                                     </ThemedText>
@@ -211,13 +214,16 @@ export default function ExpenseForm() {
                                             value={formatted}
                                             editable={false}
                                             placeholder="Data"
-                                            placeholderTextColor={placeholder}
+                                            placeholderTextColor={
+                                                COLORS.placeholder
+                                            }
                                             style={[
                                                 styles.input,
                                                 {
-                                                    backgroundColor: inputBg,
-                                                    borderColor: border,
-                                                    color: text,
+                                                    backgroundColor:
+                                                        COLORS.inputBg,
+                                                    borderColor: COLORS.border,
+                                                    color: COLORS.text,
                                                 },
                                             ]}
                                         />
@@ -266,7 +272,10 @@ export default function ExpenseForm() {
                         render={({ field: { onChange, value } }) => (
                             <>
                                 <ThemedText
-                                    style={[styles.label, { color: text }]}
+                                    style={[
+                                        styles.label,
+                                        { color: COLORS.text },
+                                    ]}
                                 >
                                     Descrição
                                 </ThemedText>
@@ -275,14 +284,14 @@ export default function ExpenseForm() {
                                     onChangeText={onChange}
                                     multiline
                                     placeholder="Descrição (opcional)"
-                                    placeholderTextColor={placeholder}
+                                    placeholderTextColor={COLORS.placeholder}
                                     style={[
                                         styles.input,
                                         styles.multiline,
                                         {
-                                            backgroundColor: inputBg,
-                                            borderColor: border,
-                                            color: text,
+                                            backgroundColor: COLORS.inputBg,
+                                            borderColor: COLORS.border,
+                                            color: COLORS.text,
                                         },
                                     ]}
                                 />
@@ -291,7 +300,7 @@ export default function ExpenseForm() {
                     />
 
                     {/* PAGAMENTO */}
-                    <ThemedText style={[styles.label, { color: text }]}>
+                    <ThemedText style={[styles.label, { color: COLORS.text }]}>
                         Forma de pagamento
                     </ThemedText>
 
@@ -309,14 +318,14 @@ export default function ExpenseForm() {
                                     onOpen={Keyboard.dismiss}
                                     placeholder="Selecione a forma de pagamento"
                                     style={{
-                                        backgroundColor: inputBg,
-                                        borderColor: border,
+                                        backgroundColor: COLORS.inputBg,
+                                        borderColor: COLORS.border,
                                     }}
                                     dropDownContainerStyle={{
-                                        backgroundColor: inputBg,
-                                        borderColor: border,
+                                        backgroundColor: COLORS.inputBg,
+                                        borderColor: COLORS.border,
                                     }}
-                                    textStyle={{ color: text }}
+                                    textStyle={{ color: COLORS.text }}
                                 />
                                 {errors.payment && (
                                     <ThemedText style={styles.error}>
@@ -342,42 +351,3 @@ export default function ExpenseForm() {
         </TouchableWithoutFeedback>
     );
 }
-
-const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-        padding: 12,
-        marginTop: 20,
-    },
-    card: {
-        padding: 16,
-        borderRadius: 12,
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: "600",
-        marginBottom: 16,
-    },
-    label: {
-        marginTop: 12,
-        marginBottom: 6,
-        fontSize: 14,
-    },
-    input: {
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        fontSize: 14,
-        marginBottom: 6,
-    },
-    multiline: {
-        minHeight: 80,
-        textAlignVertical: "top",
-    },
-    error: {
-        color: "#E53935",
-        fontSize: 12,
-        marginBottom: 6,
-    },
-});
