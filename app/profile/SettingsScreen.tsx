@@ -41,6 +41,8 @@ export default function SettingsScreen() {
             setShowDeleteModal,
             setConfirmPassword,
         });
+        router.dismissAll();
+        router.replace("/(home)/Home");
     }
 
     async function logOut() {

@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
 import {
     deleteUser,
     EmailAuthProvider,
@@ -99,8 +98,6 @@ export async function deleteUserAccount({
         setShowDeleteModal(false);
         setConfirmPassword("");
 
-        router.dismissAll();
-        router.replace("/(auth)/login");
         return true;
     } catch (error: any) {
         console.log("Erro ao excluir conta:", error);
