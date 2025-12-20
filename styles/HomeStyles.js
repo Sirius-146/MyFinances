@@ -4,23 +4,16 @@ import { COLORS } from "./default";
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: COLORS.primary,
+        alignItems: "center",
+        justifyContent: "center",
     },
-    container1: {
-        paddingVertical: 20,
-        paddingHorizontal:30,
-        borderRadius: 25,
-        backgroundColor: '#ffffff96',
-        marginBottom: 40,
-    },
-    homeText:{
-        fontFamily: 'impact',
+    homeText: {
+        fontFamily: "Inter_600SemiBold_Italic",
         fontSize: 60,
-        color: COLORS.back_2,
-        textAlign: 'center',
-    }
+        color: COLORS.primary,
+        textAlign: "center",
+        letterSpacing: 1,
+    },
 });
 
 export default styles;
