@@ -6,7 +6,13 @@ import {
     reauthenticateWithCredential,
     User,
 } from "firebase/auth";
-import { deleteDoc, doc } from "firebase/firestore";
+import {
+    collection,
+    deleteDoc,
+    doc,
+    DocumentReference,
+    getDocs,
+} from "firebase/firestore";
 import { Alert } from "react-native";
 import { db } from "../lib/firebase";
 import { wipeExpensesLocal } from "./localExpensesService";
@@ -43,12 +49,12 @@ export async function deleteUserAccount({
 }: DeleteUserParams): Promise<boolean | void> {
     if (!user) {
         Alert.alert("Erro", "Usuário não autenticado");
-        return;
+        return false;
     }
 
     if (!confirmPassword) {
         Alert.alert("Erro", "Digite sua senha para continuar.");
-        return;
+        return false;
     }
 
     try {
@@ -62,20 +68,27 @@ export async function deleteUserAccount({
         );
         await reauthenticateWithCredential(user, credential);
 
-        // Exclui conta (Login Auth)
-        await deleteUser(user);
+        const uid = user.uid;
 
-        // Exclui dados no Firestore
-        if (user.uid) {
-            const userRef = doc(db, "users", user.uid);
-            await deleteDoc(userRef);
-        }
+        const userRef = doc(db, "users", uid);
+        await deleteSubcollection(userRef, "expenses");
+
+        /**
+         * IMPORTANTE:
+         * deleteDoc NÃO apaga subcollections.
+         * Se você tiver expenses, treinos, etc.,
+         * eles precisam ser apagados antes.
+         */
+        await deleteDoc(userRef);
 
         try {
-            await wipeExpensesLocal(user.uid);
+            await wipeExpensesLocal(uid);
         } catch (err) {
             console.log("Erro ao apagar despesas locais", err);
         }
+
+        // Exclui conta (Login Auth)
+        await deleteUser(user);
 
         // Limpa local e redireciona
         try {
@@ -86,8 +99,8 @@ export async function deleteUserAccount({
         setShowDeleteModal(false);
         setConfirmPassword("");
 
-        router.replace("/login");
-        setDeleting(false);
+        router.dismissAll();
+        router.replace("/(auth)/login");
         return true;
     } catch (error: any) {
         console.log("Erro ao excluir conta:", error);
@@ -98,7 +111,15 @@ export async function deleteUserAccount({
 
         setDeleteError(message);
         Alert.alert("Erro", message);
-        setDeleting(false);
         return false;
+    } finally {
+        setDeleting(false);
     }
+}
+
+async function deleteSubcollection(parentRef: DocumentReference, name: string) {
+    const snapshot = await getDocs(collection(parentRef, name));
+
+    const deletions = snapshot.docs.map((doc) => deleteDoc(doc.ref));
+    await Promise.all(deletions);
 }

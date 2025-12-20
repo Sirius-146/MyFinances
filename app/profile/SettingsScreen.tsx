@@ -45,7 +45,8 @@ export default function SettingsScreen() {
 
     async function logOut() {
         await signOut(auth);
-        router.replace("/Home");
+        router.dismissAll();
+        router.replace("/(auth)/login");
     }
     return (
         <ThemedView style={{ flex: 1, justifyContent: "center", padding: 20 }}>
