@@ -1,6 +1,8 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import { ActivityIndicator, Modal, View } from "react-native";
 import createUser from "../services/createUser";
+import { COLORS } from "../styles/default";
 import ModernButton from "../utils/ModernButton";
 import ModernInput from "../utils/ModernInput";
 import PasswordField from "../utils/Passwordfield";
@@ -60,58 +62,67 @@ export default function RegisterModal({
 
     return (
         <Modal visible={visible} animationType="fade">
-            <View style={styles.container}>
+            <LinearGradient
+                colors={["#1F51FF", "#000080", "#6D28D9"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.container}
+            >
                 {loadingVisible && (
                     <View style={styles.viewLoading}>
                         <ActivityIndicator size="large" />
                     </View>
                 )}
-                <View style={styles.viewForm}>
-                    <View style={{ alignItems: "center" }}>
-                        <ModernInput
-                            value={user}
-                            onChangeText={setUser}
-                            placeholder="Digite seu nome"
-                        />
-                        <ModernInput
-                            value={email}
-                            onChangeText={setEmail}
-                            placeholder="Digite o e-mail"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                        />
-                        <PasswordField
-                            value={password}
-                            onChangeText={setPassword}
-                            placeholder="Digite a senha"
-                            style={[styles.inputLoginPassword]}
-                            errorMessage={passwordError}
-                        />
-                        <PasswordField
-                            value={repPassword}
-                            onChangeText={setRepPassword}
-                            placeholder="Digite a senha novamente"
-                            style={[styles.inputLoginPassword]}
-                            errorMessage={repSenhaError}
-                        />
-                    </View>
-                    <View style={styles.viewButtons}>
-                        <ModernButton
-                            text="Cadastrar"
-                            onPress={handleRegister}
-                        />
-                        <ModernButton
-                            text="Voltar"
-                            onPress={() => {
-                                resetFields();
-                                onClose();
-                            }}
-                            icon="backspace"
-                            colors={["#CF2502", "#F4320B"]}
-                        />
-                    </View>
+                <View style={{ alignItems: "center", width: "100%" }}>
+                    <ModernInput
+                        value={user}
+                        onChangeText={setUser}
+                        placeholder="Digite seu nome"
+                        style={styles.inputLoginPassword}
+                    />
+                    <ModernInput
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Digite o e-mail"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        style={styles.inputLoginPassword}
+                    />
+                    <PasswordField
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="Digite a senha"
+                        style={[styles.inputLoginPassword]}
+                        placeholderColor={COLORS.secondary}
+                        errorMessage={passwordError}
+                    />
+                    <PasswordField
+                        value={repPassword}
+                        onChangeText={setRepPassword}
+                        placeholder="Digite a senha novamente"
+                        style={[styles.inputLoginPassword]}
+                        placeholderColor={COLORS.secondary}
+                        errorMessage={repSenhaError}
+                    />
                 </View>
-            </View>
+                <View style={[styles.viewButtons, { marginTop: 30 }]}>
+                    <ModernButton
+                        text="Cadastrar"
+                        onPress={handleRegister}
+                        colors={["#1F51FF", "#4F46E5"]}
+                    />
+                    <ModernButton
+                        text="Voltar"
+                        onPress={() => {
+                            resetFields();
+                            onClose();
+                        }}
+                        icon="backspace"
+                        colors={["transparent", "transparent"]}
+                        style={styles.stylebutton}
+                    />
+                </View>
+            </LinearGradient>
         </Modal>
     );
 }

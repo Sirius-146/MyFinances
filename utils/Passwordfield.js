@@ -17,6 +17,7 @@ const PasswordField = ({
     placeholder,
     style = {},
     errorMessage = null,
+    placeholderColor = "#666",
 }) => {
     const [visible, setVisible] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
@@ -54,7 +55,7 @@ const PasswordField = ({
                     value={value}
                     onChangeText={onChangeText}
                     placeholder={placeholder}
-                    placeholderTextColor="#666"
+                    placeholderTextColor={placeholderColor}
                     secureTextEntry={!visible}
                     style={styles.inputPassword}
                     autoCapitalize="none"
@@ -65,7 +66,7 @@ const PasswordField = ({
                     <FontAwesome5
                         name={visible ? "eye-slash" : "eye"}
                         size={20}
-                        color={isFocused ? COLORS.buttons : "#666"}
+                        color={isFocused ? COLORS.secondary : "#666"}
                     />
                 </TouchableOpacity>
             </Animated.View>

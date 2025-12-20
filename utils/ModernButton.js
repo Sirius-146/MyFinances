@@ -9,6 +9,7 @@ export default function ModernButton({
     onPress,
     icon,
     colors = [COLORS.buttons, COLORS.list],
+    style = {},
     iconColor = "#fff",
     iconSize = 18,
     disabled = false,
@@ -49,7 +50,11 @@ export default function ModernButton({
                     colors={gradientColors}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={[styles.button, disabled && styles.buttonDisabled]}
+                    style={[
+                        styles.button,
+                        style,
+                        disabled && styles.buttonDisabled,
+                    ]}
                 >
                     {icon && (
                         <FontAwesome5

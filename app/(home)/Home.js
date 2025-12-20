@@ -5,7 +5,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { auth } from "../../lib/firebase";
-import styles from "../../styles/HomeStyles";
+import styles from "../../styles/loginStyles";
 import ModernButton from "../../utils/ModernButton";
 
 export default function Home() {

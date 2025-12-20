@@ -8,6 +8,7 @@ export default function ModernInput({
     placeholder,
     keyboardType,
     autoCapitalize = "words",
+    style = null,
 }) {
     const [isFocused, setIsFocused] = useState(false);
     const borderAnim = useRef(new Animated.Value(1)).current; // 1 = normal, 2 = foco
@@ -36,12 +37,12 @@ export default function ModernInput({
     });
 
     return (
-        <Animated.View style={[styles.inputContainer, { borderColor }]}>
+        <Animated.View style={[styles.inputContainer, style, { borderColor }]}>
             <TextInput
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
-                placeholderTextColor="#666"
+                placeholderTextColor={COLORS.primary}
                 style={styles.input}
                 keyboardType={keyboardType}
                 autoCapitalize={autoCapitalize}
@@ -54,12 +55,9 @@ export default function ModernInput({
 
 const styles = StyleSheet.create({
     inputContainer: {
-        backgroundColor: "#fff",
-        borderRadius: 8,
-        borderWidth: 2,
-        paddingHorizontal: 8,
+        borderRadius: 12,
+        paddingHorizontal: 10,
         marginVertical: 6,
-        width: 250,
         elevation: 2,
         shadowColor: "#000",
         shadowOpacity: 0.1,
@@ -68,7 +66,7 @@ const styles = StyleSheet.create({
     },
     input: {
         fontSize: 16,
-        paddingVertical: 10,
-        color: "#333",
+        paddingVertical: 12,
+        color: COLORS.secondary,
     },
 });
