@@ -2,7 +2,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 
-function isEmailValid(email) {
+function isEmailValid(email: string) {
     return /\S+@\S+\.\S+/.test(email);
 }
 
@@ -14,7 +14,7 @@ function isEmailValid(email) {
  * @param {string} password - Senha.
  * @throws {Error} - Em caso de email inválido ou email já registrado.
  */
-async function createUser(name, email, password) {
+async function createUser(name: string, email: string, password: string) {
     if (!isEmailValid(email)) {
         throw new Error("Digite um e-mail válido!");
     }
@@ -33,7 +33,7 @@ async function createUser(name, email, password) {
             name,
             createdAt: new Date().toISOString(),
         });
-    } catch (error) {
+    } catch (error: any) {
         if (error.code === "auth/email-already-in-use") {
             throw new Error("Email já está cadastrado!");
         }

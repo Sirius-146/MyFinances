@@ -6,7 +6,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import MonthYearHeader from "../../components/MonthYearHeader";
 import { CATEGORY_OPTIONS } from "../../constants/categories";
 import { auth } from "../../lib/firebase";
-import { getAllExpenses } from "../../services/expensesService";
+import { getMonthExpenses } from "../../services/expensesService";
 import {
     deleteExpenseLocal,
     getLocalExpenses,
@@ -62,7 +62,7 @@ export default function ExpensesListScreen() {
             }
 
             // 3) Bucar do Firestore (apenas mês atual):
-            const cloudData = await getAllExpenses(user.uid, selectedMonth);
+            const cloudData = await getMonthExpenses(user.uid, selectedMonth);
 
             // 4) Mesclar dados
             const merged = mergeLocalAndRemote(localData, cloudData);

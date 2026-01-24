@@ -11,6 +11,17 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
+interface Expense {
+    id: string;
+    category: string;
+    date: string;
+    description: string;
+    payment: string;
+    value: number;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 /**
  * Cria uma despesa no Firestore para um usuário específico.
  *
@@ -31,7 +42,11 @@ import { db } from "../lib/firebase";
  *
  * @returns {Promise<string>} Retorna o `id` da despesa criada.
  */
-export async function createExpense(userId, id, data) {
+export async function createExpense(
+    userId: string,
+    id: string,
+    data: Expense
+): Promise<string> {
     const ref = doc(db, "users", userId, "expenses", id);
 
     await setDoc(
@@ -62,11 +77,23 @@ export async function createExpense(userId, id, data) {
  *
  * @returns {Promise<boolean>} Retorna `true` quando a atualização for concluída.
  */
-export async function updateExpense(userId, expenseId, data) {
+export async function updateExpense(
+    userId: string,
+    expenseId: string,
+    data: Expense
+): Promise<boolean> {
+    type ExpenseUpdate = Omit<Expense, "createdAt" | "updatedAt">;
+
     const ref = doc(db, "users", userId, "expenses", expenseId);
 
-    const clean = { ...data };
-    delete clean.createdAt;
+    const clean: ExpenseUpdate = {
+        id: data.id,
+        category: data.category,
+        date: data.date,
+        description: data.description,
+        payment: data.payment,
+        value: data.value,
+    };
 
     await updateDoc(ref, {
         ...clean,
@@ -89,7 +116,10 @@ export async function updateExpense(userId, expenseId, data) {
  *
  * @returns {Promise<boolean>} Retorna `true` após a exclusão ser efetuada.
  */
-export async function deleteExpense(userId, expenseId) {
+export async function deleteExpense(
+    userId: string,
+    expenseId: string
+): Promise<boolean> {
     try {
         const ref = doc(db, "users", userId, "expenses", expenseId);
         await deleteDoc(ref);
@@ -124,7 +154,10 @@ export async function deleteExpense(userId, expenseId) {
  * @returns {Promise<Array<Object>>} Lista de despesas do mês,
  * cada item contendo `{ id, ...dadosDoDocumento }`.
  */
-export async function getMonthExpenses(userId, monthKey = null) {
+export async function getMonthExpenses(
+    userId: string,
+    monthKey = null
+): Promise<object[]> {
     try {
         const finalMonthKey = monthKey || getMonthKeyFromDate();
         const nexMonthKey = getNextMonthKey(finalMonthKey);
@@ -149,7 +182,7 @@ export async function getMonthExpenses(userId, monthKey = null) {
     }
 }
 
-export async function getAllExpenses(userId) {
+export async function getAllExpenses(userId: string) {
     try {
         const colRef = collection(db, "users", String(userId), "expenses");
 
@@ -172,7 +205,7 @@ function getMonthKeyFromDate(date = new Date()) {
     return date.toISOString().slice(0, 7);
 }
 
-function getNextMonthKey(monthKey) {
+function getNextMonthKey(monthKey: string) {
     const [y, m] = monthKey.split("-").map(Number);
     const next = new Date(y, m, 1); // m já é 0-based aqui
     return next.toISOString().slice(0, 7);
