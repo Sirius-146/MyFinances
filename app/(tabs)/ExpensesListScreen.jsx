@@ -31,7 +31,7 @@ export default function ExpensesListScreen() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
             2,
-            "0"
+            "0",
         )}`;
     });
 
@@ -49,7 +49,7 @@ export default function ExpensesListScreen() {
             // 1) Carregar sempre do armazenamento local
             const localData = await getLocalExpenses(
                 user.uid,
-                `@expenses/${selectedMonth}`
+                `@expenses/${selectedMonth}`,
             );
             setExpenses(localData);
             setFilteredExpenses(localData);
@@ -84,7 +84,7 @@ export default function ExpensesListScreen() {
         useCallback(() => {
             if (!user) return;
             loadExpenses();
-        }, [user, selectedMonth])
+        }, [user, selectedMonth]),
     );
 
     useEffect(() => {
@@ -92,11 +92,19 @@ export default function ExpensesListScreen() {
             setFilteredExpenses(expenses);
         } else {
             const filtered = expenses.filter(
-                (item) => item.category === selectedCategory
+                (item) => item.category === selectedCategory,
             );
             setFilteredExpenses(filtered);
         }
     }, [selectedCategory, expenses]);
+
+    function sumExpenses() {
+        let total = 0;
+        for (let expense of filteredExpenses) {
+            total += expense.value;
+        }
+        return total;
+    }
 
     async function handleDelete(expenseId) {
         try {
@@ -155,6 +163,39 @@ export default function ExpensesListScreen() {
                 listItemLabelStyle={{ color: COLORS.text }}
                 zIndex={100}
             />
+            <View
+                style={{
+                    backgroundColor: COLORS.card,
+                    alignItems: "center",
+                    paddingVertical: 10,
+                    marginBlockEnd: 5,
+                    borderRadius: 12,
+                }}
+            >
+                <Text
+                    style={{
+                        fontSize: 18,
+                        color: COLORS.text,
+                    }}
+                >
+                    Total:{" "}
+                    <Text
+                        style={{
+                            color: COLORS.icon,
+                        }}
+                    >
+                        R$
+                        <Text
+                            style={{
+                                fontSize: 20,
+                                fontWeight: "bold",
+                            }}
+                        >
+                            {Number(sumExpenses()).toFixed(2)}
+                        </Text>
+                    </Text>
+                </Text>
+            </View>
             {loading ? (
                 <ActivityIndicator size="large" />
             ) : (
