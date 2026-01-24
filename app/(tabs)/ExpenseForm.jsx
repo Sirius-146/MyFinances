@@ -61,6 +61,7 @@ export default function ExpenseForm() {
         control,
         handleSubmit,
         reset,
+        watch,
         formState: { errors, isValid },
     } = useForm({
         defaultValues: {
@@ -81,11 +82,14 @@ export default function ExpenseForm() {
     const [toastMessage, setToastMessage] = useState("");
     const [toastType, setToastType] = useState("success");
 
+    const payment = watch("payment");
+
     function onSubmit(data) {
         const payload = {
             ...data,
             value: data.value / 100,
         };
+        console.log(data.payment);
         saveExpenseLocal(payload, user.uid);
 
         setToastMessage("Registro criado com sucesso!");
@@ -108,12 +112,10 @@ export default function ExpenseForm() {
                     <ThemedText style={[styles.title, { color: COLORS.text }]}>
                         Registrar Despesa
                     </ThemedText>
-
                     {/* CATEGORIA */}
                     <ThemedText style={[styles.label, { color: COLORS.text }]}>
                         Categoria
                     </ThemedText>
-
                     <Controller
                         control={control}
                         name="category"
@@ -145,7 +147,6 @@ export default function ExpenseForm() {
                             </>
                         )}
                     />
-
                     {/* VALOR */}
                     <Controller
                         control={control}
@@ -196,7 +197,6 @@ export default function ExpenseForm() {
                             );
                         }}
                     />
-
                     {/* DATA */}
                     <Controller
                         control={control}
@@ -276,7 +276,6 @@ export default function ExpenseForm() {
                             );
                         }}
                     />
-
                     {/* DESCRIÇÃO */}
                     <Controller
                         control={control}
@@ -310,12 +309,10 @@ export default function ExpenseForm() {
                             </>
                         )}
                     />
-
                     {/* PAGAMENTO */}
                     <ThemedText style={[styles.label, { color: COLORS.text }]}>
                         Forma de pagamento
                     </ThemedText>
-
                     <Controller
                         control={control}
                         name="payment"
@@ -347,7 +344,45 @@ export default function ExpenseForm() {
                             </>
                         )}
                     />
+
+                    {payment === "cartao" && (
+                        <Controller
+                            control={control}
+                            name="card"
+                            render={({ field: { onChange, value } }) => (
+                                <>
+                                    <ThemedText
+                                        style={[
+                                            styles.label,
+                                            { color: COLORS.text },
+                                        ]}
+                                    >
+                                        Cartão
+                                    </ThemedText>
+                                    <TextInput
+                                        value={value}
+                                        onChangeText={onChange}
+                                        multiline
+                                        placeholder="Ex: Itaú"
+                                        placeholderTextColor={
+                                            COLORS.placeholder
+                                        }
+                                        style={[
+                                            styles.input,
+                                            // styles.multiline,
+                                            {
+                                                backgroundColor: COLORS.inputBg,
+                                                borderColor: COLORS.border,
+                                                color: COLORS.text,
+                                            },
+                                        ]}
+                                    />
+                                </>
+                            )}
+                        />
+                    )}
                 </ThemedView>
+
                 <View
                     style={{ width: "60%", alignSelf: "center", marginTop: 20 }}
                 >
