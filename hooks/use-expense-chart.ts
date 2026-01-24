@@ -26,7 +26,7 @@ export function useExpensesCharts(expenses: Expense[]) {
 
         return Object.entries(acc).map(([category, value]) => ({
             value,
-            text: CATEGORY_LABELS[category] ?? category,
+            text: CATEGORY_LABELS[category].slice(0, 3) ?? category.slice(0, 3),
             color: CATEGORY_COLORS[category] ?? "#BDBDBD",
         }));
     }, [expenses]);
@@ -36,13 +36,16 @@ export function useExpensesCharts(expenses: Expense[]) {
      */
     const byCategoryBars = useMemo(() => {
         return Object.entries(
-            expenses.reduce((acc, expense) => {
-                acc[expense.category] =
-                    (acc[expense.category] || 0) + expense.value;
-                return acc;
-            }, {} as Record<string, number>)
+            expenses.reduce(
+                (acc, expense) => {
+                    acc[expense.category] =
+                        (acc[expense.category] || 0) + expense.value;
+                    return acc;
+                },
+                {} as Record<string, number>,
+            ),
         ).map(([category, value]) => ({
-            label: CATEGORY_LABELS[category] ?? category,
+            category,
             value,
             frontColor: CATEGORY_COLORS[category],
         }));

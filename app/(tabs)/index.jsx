@@ -1,7 +1,12 @@
-import { ScrollView, View } from "react-native";
-import { PieChart } from "react-native-gifted-charts";
+import {
+    ActivityIndicator,
+    Pressable,
+    ScrollView,
+    Text,
+    View,
+} from "react-native";
 import { BarChartBase } from "../../components/barChartBase";
-import { PieChartBase } from "../../components/pieChartBase";
+import { ChartLegend } from "../../utils/ChartLegend";
 
 import { useCallback, useEffect, useState } from "react";
 import WelcomeOnboardingModal from "../../utils/WelcomeOnboardingModal";
@@ -17,8 +22,38 @@ import { isOnline } from "../../utils/network";
 
 import { mergeLocalAndRemote } from "../../utils/mergeLocalAndRemote";
 
+function ChartToggleButton({ label, active, onPress }) {
+    const colors = useAppColors();
+
+    return (
+        <Pressable
+            onPress={onPress}
+            style={{
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                marginRight: 8,
+                borderRadius: 8,
+                backgroundColor: active ? colors.primary : colors.surface,
+            }}
+        >
+            <Text
+                style={{
+                    color: active ? colors.tint : colors.text,
+                    fontWeight: "500",
+                }}
+            >
+                {label}
+            </Text>
+        </Pressable>
+    );
+}
+
+// type ChartView = "category" | "month";
+
 export default function HomeScreen() {
     const user = auth.currentUser;
+
+    const [loading, setLoading] = useState(true);
 
     const COLORS = useAppColors();
     const { justRegistered } = useLocalSearchParams();
@@ -27,24 +62,25 @@ export default function HomeScreen() {
     const [expenses, setExpenses] = useState([]);
     const [filteredExpenses, setFilteredExpenses] = useState([]);
 
+    const [chartView, setChartView] = useState("category");
+
     const { byCategory, byCategoryBars, byMonth } =
         useExpensesCharts(filteredExpenses);
     const [selectedMonth, setSelectedMonth] = useState(() => {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
             2,
-            "0"
+            "0",
         )}`;
     });
 
-    // const [chartView, setChartView] = useState < ChartView > "day";
-
     const loadExpenses = async () => {
         try {
+            setLoading(true);
             // 1) Carregar sempre do armazenamento local
             const localData = await getLocalExpenses(
                 user.uid,
-                `@expenses/${selectedMonth}`
+                `@expenses/${selectedMonth}`,
             );
             setExpenses(localData);
             setFilteredExpenses(localData);
@@ -70,13 +106,15 @@ export default function HomeScreen() {
             setFilteredExpenses(merged);
         } catch (error) {
             console.log("Error in loadExpenses" + error);
+        } finally {
+            setLoading(false);
         }
     };
     useFocusEffect(
         useCallback(() => {
             if (!user) return;
             loadExpenses();
-        }, [user, selectedMonth])
+        }, [user, selectedMonth]),
     );
 
     useEffect(() => {
@@ -84,6 +122,10 @@ export default function HomeScreen() {
             setWelcomeVisible(true);
         }
     }, [justRegistered]);
+
+    if (loading) {
+        return <ActivityIndicator />;
+    }
 
     return (
         // <ParallaxScrollView
@@ -103,9 +145,35 @@ export default function HomeScreen() {
 
         <View style={{ flex: 1, backgroundColor: COLORS.background }}>
             <ScrollView>
-                <View style={{ paddingTop: 50, paddingLeft: 20 }}>
-                    <BarChartBase data={byCategoryBars} />
-                    <BarChartBase data={byMonth} />
+                <View style={{ paddingTop: 50, paddingHorizontal: 10 }}>
+                    <View style={{ flexDirection: "row", marginBottom: 12 }}>
+                        <ChartToggleButton
+                            label="Por categoria"
+                            active={chartView === "category"}
+                            onPress={() => setChartView("category")}
+                        />
+                        <ChartToggleButton
+                            label="Por mês"
+                            active={chartView === "month"}
+                            onPress={() => setChartView("month")}
+                        />
+                    </View>
+
+                    <View>
+                        {chartView === "category" && (
+                            <BarChartBase data={byCategoryBars} />
+                        )}
+
+                        {chartView === "month" && (
+                            <BarChartBase data={byMonth} />
+                        )}
+                    </View>
+
+                    {chartView === "category" && (
+                        <ChartLegend
+                            categories={byCategoryBars.map((b) => b.category)}
+                        />
+                    )}
 
                     {/* <LineChart
                     data={data}
@@ -114,7 +182,7 @@ export default function HomeScreen() {
                     hideDataPoints={false}
                     isAnimated
                     /> */}
-
+                    {/* 
                     <PieChartBase data={byCategory} />
 
                     {byCategory.length > 0 && (
@@ -123,9 +191,8 @@ export default function HomeScreen() {
                             donut
                             showText
                             textColor="#000"
-                            // radius={120}
                         />
-                    )}
+                    )} */}
                 </View>
             </ScrollView>
             {/* 
