@@ -10,7 +10,7 @@ function parseDateAsLocal(dateStr) {
     return new Date(year, month - 1, day);
 }
 
-export default function ExpenseCard({ item, onPress, onDeletePress, colors }) {
+export default function ExpenseCard({ item, onPress, colors, onDeletePress }) {
     return (
         <Animated.View
             entering={FadeInUp.duration(300)}
@@ -68,7 +68,7 @@ export default function ExpenseCard({ item, onPress, onDeletePress, colors }) {
 
             <TouchableOpacity
                 style={{ marginLeft: 14 }}
-                onPress={onDeletePress}
+                onPress={() => onDeletePress()}
             >
                 <FontAwesome5
                     name={"trash-alt"}

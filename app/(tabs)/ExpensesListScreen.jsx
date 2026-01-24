@@ -1,7 +1,14 @@
 import { useAppColors } from "@/hooks/use-app-colors";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import {
+    ActivityIndicator,
+    FlatList,
+    Modal,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import MonthYearHeader from "../../components/MonthYearHeader";
 import { CATEGORY_OPTIONS } from "../../constants/categories";
@@ -15,6 +22,7 @@ import ExpenseCard from "../../utils/ExpensesCard";
 import { mergeLocalAndRemote } from "../../utils/mergeLocalAndRemote";
 import ModalExpenseDetails from "../../utils/ModalExpenseDetails";
 import { isOnline } from "../../utils/network";
+import { ToastMessage } from "../../utils/ToastMessage";
 
 export default function ExpensesListScreen() {
     const COLORS = useAppColors();
@@ -26,6 +34,11 @@ export default function ExpensesListScreen() {
     const [loading, setLoading] = useState(true);
     const [selectedExpense, setSelectedExpense] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    const [toastVisible, setToastVisible] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("success");
 
     const [selectedMonth, setSelectedMonth] = useState(() => {
         const d = new Date();
@@ -109,9 +122,12 @@ export default function ExpensesListScreen() {
     async function handleDelete(expenseId) {
         try {
             await deleteExpenseLocal(expenseId, user.uid);
-            alert("Registro excluído com sucesso!");
+            setToastMessage("Registro excluído com sucesso!");
+            setToastVisible(true);
         } catch (error) {
-            alert("Houve um problema ao excluir");
+            setToastMessage("Houve um problema ao excluir");
+            setToastVisible(true);
+            setToastType("error");
             console.log(error);
         } finally {
             loadExpenses();
@@ -139,9 +155,7 @@ export default function ExpensesListScreen() {
                 COLORS={COLORS}
             />
 
-            {/* =============================
-          DropdownPicker de Filtragem
-      ============================== */}
+            {/* ============================= DropdownPicker de Filtragem ============================== */}
             <DropDownPicker
                 open={openCategory}
                 value={selectedCategory}
@@ -209,7 +223,10 @@ export default function ExpensesListScreen() {
                                 setSelectedExpense(item);
                                 setShowModal(true);
                             }}
-                            onDeletePress={() => handleDelete(item.id)}
+                            onDeletePress={() => {
+                                setSelectedExpense(item);
+                                setShowDeleteModal(true);
+                            }}
                             colors={COLORS}
                         />
                     )}
@@ -224,6 +241,86 @@ export default function ExpensesListScreen() {
                     loadExpenses();
                 }}
             />
+
+            <ToastMessage
+                visible={toastVisible}
+                message={toastMessage}
+                type={toastType}
+                onHide={() => setToastVisible(false)}
+            />
+
+            <Modal visible={showDeleteModal} transparent animationType="fade">
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: "rgba(0,0,0,0.6)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        paddingHorizontal: 25,
+                    }}
+                >
+                    <View
+                        style={{
+                            width: "100%",
+                            borderRadius: 14,
+                            padding: 20,
+                            backgroundColor: "#fff",
+                        }}
+                    >
+                        <Text style={{ fontSize: 16, paddingBottom: 10 }}>
+                            Confirma a exclusão?
+                        </Text>
+
+                        <View style={{ flexDirection: "row" }}>
+                            <TouchableOpacity
+                                onPress={() => setShowDeleteModal(false)}
+                                style={{
+                                    flex: 1,
+                                    marginRight: 8,
+                                    paddingVertical: 12,
+                                    borderRadius: 10,
+                                    alignItems: "center",
+                                    backgroundColor: "#ccc",
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontWeight: "bold",
+                                        color: "#fff",
+                                    }}
+                                >
+                                    Cancelar
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={async () => {
+                                    await handleDelete(selectedExpense.id);
+                                    setShowDeleteModal(false);
+                                    setSelectedExpense(null);
+                                }}
+                                style={{
+                                    flex: 1,
+                                    marginLeft: 8,
+                                    paddingVertical: 12,
+                                    borderRadius: 10,
+                                    alignItems: "center",
+                                    backgroundColor: "#d9534f",
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontWeight: "bold",
+                                        color: "#fff",
+                                    }}
+                                >
+                                    Excluir
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
