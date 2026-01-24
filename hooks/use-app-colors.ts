@@ -11,5 +11,7 @@ export function useAppColors() {
         success: useThemeColor({}, "success"),
         inputBg: useThemeColor({}, "inputBg"),
         placeholder: useThemeColor({}, "placeholder"),
+        fail: useThemeColor({}, "fail"),
+        tint: useThemeColor({}, "tint"),
     };
 }

@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useAppColors } from "@/hooks/use-app-colors";
+import { ToastMessage } from "@/utils/ToastMessage";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { User, updateEmail } from "firebase/auth";
@@ -41,6 +42,9 @@ export default function Perfil() {
     const [email, setEmail] = useState<string>("");
     const [name, setName] = useState<string>("");
     const [profileName, setProfileName] = useState<string>("");
+    const [toastVisible, setToastVisible] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState<"success" | "error">("success");
 
     const [loading, setLoading] = useState<boolean>(false);
 
@@ -107,10 +111,13 @@ export default function Perfil() {
             setProfileName(name);
             setFormEdited(false);
 
-            Alert.alert("Sucesso", "Dados atualizados!");
+            setToastMessage("Seus dados foram atualizados!");
+            setToastVisible(true);
         } catch (error) {
             console.log(error);
-            Alert.alert("Erro", "Não foi possível atualizar os dados.");
+            setToastMessage("Erro ao atualizar dados");
+            setToastVisible(true);
+            setToastType("error");
         } finally {
             setLoading(false);
         }
@@ -197,7 +204,7 @@ export default function Perfil() {
                     <TouchableOpacity
                         onPress={() =>
                             router.push(
-                                `/profile/PasswordUpdate?userId=${user?.uid}`
+                                `/profile/PasswordUpdate?userId=${user?.uid}`,
                             )
                         }
                     >
@@ -241,6 +248,13 @@ export default function Perfil() {
                     </View>
                 </Modal>
             </ThemedView>
+
+            <ToastMessage
+                visible={toastVisible}
+                message={toastMessage}
+                type={toastType}
+                onHide={() => setToastVisible(false)}
+            />
         </ThemedView>
     );
 }

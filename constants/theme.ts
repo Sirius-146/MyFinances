@@ -24,6 +24,7 @@ export const Colors = {
 
         inputBg: "#f5f5f5",
         placeholder: "#666",
+        fail: "#FF2800",
     },
     dark: {
         background: "#0D0D0D",
@@ -40,6 +41,7 @@ export const Colors = {
 
         inputBg: "#1a1a1a",
         placeholder: "#aaa",
+        fail: "#FF2800",
     },
 };
 

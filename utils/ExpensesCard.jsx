@@ -70,7 +70,11 @@ export default function ExpenseCard({ item, onPress, onDeletePress, colors }) {
                 style={{ marginLeft: 14 }}
                 onPress={onDeletePress}
             >
-                <FontAwesome5 name={"trash-alt"} size={20} color={"red"} />
+                <FontAwesome5
+                    name={"trash-alt"}
+                    size={20}
+                    color={colors.fail}
+                />
             </TouchableOpacity>
         </Animated.View>
     );

@@ -25,6 +25,7 @@ import { auth } from "../../lib/firebase";
 import { saveExpenseLocal } from "../../services/localExpensesService";
 
 import styles from "../../styles/FormStyles";
+import { ToastMessage } from "../../utils/ToastMessage";
 
 // ----------------------------
 // VALIDAÇÃO
@@ -76,6 +77,9 @@ export default function ExpenseForm() {
     const [openCategory, setOpenCategory] = useState(false);
     const [openPayment, setOpenPayment] = useState(false);
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [toastVisible, setToastVisible] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("success");
 
     function onSubmit(data) {
         const payload = {
@@ -84,6 +88,14 @@ export default function ExpenseForm() {
         };
         saveExpenseLocal(payload, user.uid);
 
+        setToastMessage("Registro criado com sucesso!");
+        setToastVisible(true);
+        // setToastType("success");
+        // } catch (error) {
+        //     setToastMessage("Erro ao criar registro");
+        //     setToastVisible(true);
+        //     setToastType("error");
+        // } finally {
         reset();
         setOpenCategory(false);
         setOpenPayment(false);
@@ -250,10 +262,10 @@ export default function ExpenseForm() {
                                                 const y =
                                                     selected.getFullYear();
                                                 const m = String(
-                                                    selected.getMonth() + 1
+                                                    selected.getMonth() + 1,
                                                 ).padStart(2, "0");
                                                 const d = String(
-                                                    selected.getDate()
+                                                    selected.getDate(),
                                                 ).padStart(2, "0");
 
                                                 onChange(`${y}-${m}-${d}`);
@@ -347,6 +359,12 @@ export default function ExpenseForm() {
                         colors={!isValid ? undefined : ["#007bff", "#0056d6"]}
                     />
                 </View>
+                <ToastMessage
+                    visible={toastVisible}
+                    message={toastMessage}
+                    type={toastType}
+                    onHide={() => setToastVisible(false)}
+                />
             </ThemedView>
         </TouchableWithoutFeedback>
     );
